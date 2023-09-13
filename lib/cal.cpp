@@ -51,3 +51,27 @@ string Date::toString() {
   return to_string(year) + "-" + formatFixedWidth(to_string(month), 2, '0') +
          "-" + formatFixedWidth(to_string(day), 2, '0');
 }
+
+class Time {
+public:
+  Time(string s);
+  string toString();
+
+private:
+  int hour;
+  int minute;
+  int second;
+};
+
+Time::Time(string s) {
+  vector<string> tokens = split(s, ':');
+  hour = stoi(tokens[0]);
+  minute = stoi(tokens[1]);
+  second = stoi(tokens[2]);
+}
+
+string Time::toString() {
+  return formatFixedWidth(to_string(hour), 2, '0') + ":" +
+         formatFixedWidth(to_string(minute), 2, '0') + ":" +
+         formatFixedWidth(to_string(second), 2, '0');
+}
