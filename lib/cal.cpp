@@ -95,3 +95,26 @@ DateTime::DateTime(string s) {
 string DateTime::toString() {
   return date->toString() + " " + time->toString();
 }
+
+class Duration {
+public:
+  Duration(string s);
+  string toString();
+
+private:
+  int hour;
+  int minute;
+  int second;
+};
+
+Duration::Duration(string s) {
+  vector<string> tokens = split(s, ':');
+  hour = stoi(tokens[0]);
+  minute = stoi(tokens[1]);
+  second = stoi(tokens[2]);
+}
+
+string Duration::toString() {
+  return to_string(hour) + ":" + formatFixedWidth(to_string(minute), 2, '0') +
+         ":" + formatFixedWidth(to_string(second), 2, '0');
+}
