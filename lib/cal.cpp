@@ -28,3 +28,26 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
 
   return tokens;
 }
+
+class Date {
+public:
+  Date(string s);
+  string toString();
+
+private:
+  int year;
+  int month;
+  int day;
+};
+
+Date::Date(string s) {
+  vector<string> tokens = split(s, '-');
+  year = stoi(tokens[0]);
+  month = stoi(tokens[1]);
+  day = stoi(tokens[2]);
+}
+
+string Date::toString() {
+  return to_string(year) + "-" + formatFixedWidth(to_string(month), 2, '0') +
+         "-" + formatFixedWidth(to_string(day), 2, '0');
+}
