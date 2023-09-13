@@ -75,3 +75,23 @@ string Time::toString() {
          formatFixedWidth(to_string(minute), 2, '0') + ":" +
          formatFixedWidth(to_string(second), 2, '0');
 }
+
+class DateTime {
+public:
+  DateTime(string s);
+  string toString();
+
+private:
+  Date *date;
+  Time *time;
+};
+
+DateTime::DateTime(string s) {
+  vector<string> tokens = split(s, ' ');
+  date = new Date(tokens[0]);
+  time = new Time(tokens[1]);
+}
+
+string DateTime::toString() {
+  return date->toString() + " " + time->toString();
+}
