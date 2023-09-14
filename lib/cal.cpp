@@ -32,6 +32,15 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
 class Date {
 public:
   Date(string s);
+  Date(int year, int month, int day) {
+    this->year = year;
+    this->month = month;
+    this->day = day;
+  }
+  int getYear() { return year; }
+  int getMonth() { return month; }
+  int getDay() { return day; }
+  void delay(int year, int month, int day);
   string toString();
 
 private:
@@ -55,6 +64,15 @@ string Date::toString() {
 class Time {
 public:
   Time(string s);
+  Time(int hour, int minute, int second) {
+    this->hour = hour;
+    this->minute = minute;
+    this->second = second;
+  }
+  void delay(Duration d);
+  int getHour() { return hour; }
+  int getMinute() { return minute; }
+  int getSecond() { return second; }
   string toString();
 
 private:
@@ -79,6 +97,17 @@ string Time::toString() {
 class DateTime {
 public:
   DateTime(string s);
+  DateTime(int year, int month, int day, int hour, int minute, int second) {
+    date = new Date(year, month, day);
+    time = new Time(hour, minute, second);
+  }
+  void delay(Duration d);
+  int getYear() { return date->getYear(); }
+  int getMonth() { return date->getMonth(); }
+  int getDay() { return date->getDay(); }
+  int getHour() { return time->getHour(); }
+  int getMinute() { return time->getMinute(); }
+  int getSecond() { return time->getSecond(); }
   string toString();
 
 private:
@@ -98,13 +127,22 @@ string DateTime::toString() {
 
 class Duration {
 public:
-  Duration(string s);
+  Event(string s);
+  Event(string name, DateTime *dt, Duration *d) {
+    this->name = name;
+    time = dt;
+    duration = d;
+  }
+  void delay(Duration s);
+  void setName(string s);
+  bool isAfter(DateTime dt);
+  bool isBefore(DateTime dt);
   string toString();
 
 private:
-  int hour;
-  int minute;
-  int second;
+  string name;
+  DateTime *time;
+  Duration *duration;
 };
 
 Duration::Duration(string s) {
