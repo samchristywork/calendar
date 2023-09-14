@@ -189,14 +189,69 @@ private:
   Duration *duration;
 };
 
-Duration::Duration(string s) {
-  vector<string> tokens = split(s, ':');
-  hour = stoi(tokens[0]);
-  minute = stoi(tokens[1]);
-  second = stoi(tokens[2]);
+Event::Event(string s) {
+  vector<string> tokens = split(s, '\t');
+  name = tokens[0];
+  time = new DateTime(tokens[1]);
+  duration = new Duration(tokens[2]);
 }
 
-string Duration::toString() {
-  return to_string(hour) + ":" + formatFixedWidth(to_string(minute), 2, '0') +
-         ":" + formatFixedWidth(to_string(second), 2, '0');
+void Event::delay(Duration d) { time->delay(d); }
+
+void Event::setName(string s) { name = s; }
+
+bool Event::isAfter(DateTime dt) {
+  if (time->getYear() > dt.getYear()) {
+    return true;
+  } else if (time->getYear() == dt.getYear()) {
+    if (time->getMonth() > dt.getMonth()) {
+      return true;
+    } else if (time->getMonth() == dt.getMonth()) {
+      if (time->getDay() > dt.getDay()) {
+        return true;
+      } else if (time->getDay() == dt.getDay()) {
+        if (time->getHour() > dt.getHour()) {
+          return true;
+        } else if (time->getHour() == dt.getHour()) {
+          if (time->getMinute() > dt.getMinute()) {
+            return true;
+          } else if (time->getMinute() == dt.getMinute()) {
+            if (time->getSecond() > dt.getSecond()) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+bool Event::isBefore(DateTime dt) {
+  if (time->getYear() < dt.getYear()) {
+    return true;
+  } else if (time->getYear() == dt.getYear()) {
+    if (time->getMonth() < dt.getMonth()) {
+      return true;
+    } else if (time->getMonth() == dt.getMonth()) {
+      if (time->getDay() < dt.getDay()) {
+        return true;
+      } else if (time->getDay() == dt.getDay()) {
+        if (time->getHour() < dt.getHour()) {
+          return true;
+        } else if (time->getHour() == dt.getHour()) {
+          if (time->getMinute() < dt.getMinute()) {
+            return true;
+          } else if (time->getMinute() == dt.getMinute()) {
+            if (time->getSecond() < dt.getSecond()) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return false;
 }
