@@ -305,3 +305,25 @@ private:
 };
 
 void Calendar::addEvent(Event *event) { events.push_back(event); }
+
+Event *Calendar::findEvent(string s) {
+  Event *event = new Event(s);
+
+  for (int i = 0; i < events.size(); i++) {
+    if (events[i]->toString() == event->toString()) {
+      return events[i];
+    }
+  }
+
+  return NULL;
+}
+
+string Calendar::serialize() {
+  stringstream ss;
+
+  for (int i = 0; i < events.size(); i++) {
+    ss << events[i]->toString() << endl;
+  }
+
+  return ss.str();
+}
