@@ -29,6 +29,37 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
   return tokens;
 }
 
+class Duration {
+public:
+  Duration(string s);
+  Duration(int hour, int minute, int second) {
+    this->hour = hour;
+    this->minute = minute;
+    this->second = second;
+  }
+  int getMinute() { return minute; }
+  int getSecond() { return second; }
+  int getHour() { return hour; }
+  string toString();
+
+private:
+  int hour;
+  int minute;
+  int second;
+};
+
+Duration::Duration(string s) {
+  vector<string> tokens = split(s, ':');
+  hour = stoi(tokens[0]);
+  minute = stoi(tokens[1]);
+  second = stoi(tokens[2]);
+}
+
+string Duration::toString() {
+  return to_string(hour) + ":" + formatFixedWidth(to_string(minute), 2, '0') +
+         ":" + formatFixedWidth(to_string(second), 2, '0');
+}
+
 class Date {
 public:
   Date(string s);
@@ -255,3 +286,22 @@ bool Event::isBefore(DateTime dt) {
 
   return false;
 }
+
+string Event::toString() {
+  return name + "\t" + time->toString() + "\t" + duration->toString();
+}
+
+class Calendar {
+public:
+  void addEvent(Event *event);
+  Event *findEvent(string s);
+  string serialize();
+  void readFromFile(string filename);
+  void writeToFile(string filename);
+  vector<Event *> getEventsBetween(DateTime start, DateTime end);
+
+private:
+  vector<Event *> events;
+};
+
+void Calendar::addEvent(Event *event) { events.push_back(event); }
