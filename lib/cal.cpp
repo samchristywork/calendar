@@ -341,3 +341,14 @@ void Calendar::writeToFile(string filename) {
   file << serialize();
 }
 
+vector<Event *> Calendar::getEventsBetween(DateTime start, DateTime end) {
+  vector<Event *> eventsBetween;
+
+  for (int i = 0; i < events.size(); i++) {
+    if (events[i]->isAfter(start) && events[i]->isBefore(end)) {
+      eventsBetween.push_back(events[i]);
+    }
+  }
+
+  return eventsBetween;
+}
