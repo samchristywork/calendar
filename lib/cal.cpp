@@ -327,3 +327,17 @@ string Calendar::serialize() {
 
   return ss.str();
 }
+
+void Calendar::readFromFile(string filename) {
+  ifstream file(filename);
+  string line;
+  while (getline(file, line)) {
+    addEvent(new Event(line));
+  }
+}
+
+void Calendar::writeToFile(string filename) {
+  ofstream file(filename);
+  file << serialize();
+}
+
