@@ -12,7 +12,7 @@ void Calendar::addEvent(Event *event) { events.push_back(event); }
 Event *Calendar::findEvent(string s) {
   Event *event = new Event(s);
 
-  for (int i = 0; i < events.size(); i++) {
+  for (unsigned int i = 0; i < events.size(); i++) {
     if (events[i]->toString() == event->toString()) {
       return events[i];
     }
@@ -24,7 +24,7 @@ Event *Calendar::findEvent(string s) {
 string Calendar::serialize() {
   stringstream ss;
 
-  for (int i = 0; i < events.size(); i++) {
+  for (unsigned int i = 0; i < events.size(); i++) {
     ss << events[i]->toString() << endl;
   }
 
@@ -47,7 +47,7 @@ void Calendar::writeToFile(string filename) {
 vector<Event *> Calendar::getEventsBetween(DateTime start, DateTime end) {
   vector<Event *> eventsBetween;
 
-  for (int i = 0; i < events.size(); i++) {
+  for (unsigned int i = 0; i < events.size(); i++) {
     if (events[i]->isAfter(start) && events[i]->isBefore(end)) {
       eventsBetween.push_back(events[i]);
     }

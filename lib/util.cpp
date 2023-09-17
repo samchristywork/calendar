@@ -1,12 +1,12 @@
 #include <sstream>
 #include <util.h>
 
-string formatFixedWidth(string s, int length, char leftpad) {
+string formatFixedWidth(string s, unsigned int length, char leftpad) {
   if (s.length() >= length) {
     return s;
   }
   string result = s;
-  for (int i = 0; i < length - s.length(); i++) {
+  for (unsigned int i = 0; i < length - s.length(); i++) {
     result = leftpad + result;
   }
   return result;
