@@ -1,4 +1,5 @@
 #include <datetime.h>
+#include <time.h>
 #include <util.h>
 
 Duration::Duration(string s) {
@@ -7,6 +8,8 @@ Duration::Duration(string s) {
   minute = stoi(tokens[1]);
   second = stoi(tokens[2]);
 }
+
+int Duration::getEpoch() { return hour * 60 * 60 + minute * 60 + second; }
 
 string Duration::toString() {
   return to_string(hour) + ":" + formatFixedWidth(to_string(minute), 2, '0') +

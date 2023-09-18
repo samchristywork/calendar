@@ -16,6 +16,7 @@ public:
   int getMinute() { return minute; }
   int getSecond() { return second; }
   int getHour() { return hour; }
+  int getEpoch();
   string toString();
 
 private:
