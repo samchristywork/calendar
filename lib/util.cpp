@@ -1,5 +1,9 @@
+#include <iostream>
 #include <sstream>
+#include <string>
 #include <util.h>
+
+using namespace std;
 
 string formatFixedWidth(string s, unsigned int length, char leftpad) {
   if (s.length() >= length) {
@@ -22,4 +26,9 @@ std::vector<std::string> split(const std::string &s, char delimiter) {
   }
 
   return tokens;
+}
+
+void deprecationNotice(string s) {
+  cout << "WARNING: " << s << " is deprecated and will be removed in a future "
+       << "version of this program." << endl;
 }
