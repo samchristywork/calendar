@@ -15,6 +15,7 @@ public:
     duration = d;
   }
   void delay(Duration s);
+  void offset(Duration s);
   void setName(string s);
   bool isAfter(DateTime dt);
   bool isBefore(DateTime dt);

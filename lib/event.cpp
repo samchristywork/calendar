@@ -9,7 +9,17 @@ Event::Event(string s) {
   duration = new Duration(tokens[2]);
 }
 
-void Event::delay(Duration d) { time->delay(d); }
+void Event::delay(Duration d) {
+  deprecationNotice("Event::delay(Duration)");
+
+  time->delay(d);
+}
+
+void Event::offset(Duration d) {
+  int eventEpoch = time->getEpoch();
+  int offsetSeconds = d.getEpoch();
+  int newEpoch = eventEpoch + offsetSeconds;
+}
 
 void Event::setName(string s) { name = s; }
 
