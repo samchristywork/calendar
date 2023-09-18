@@ -91,6 +91,18 @@ void DateTime::delay(Duration d) {
   }
 }
 
+int DateTime::getEpoch() {
+  struct tm t;
+  t.tm_year = date->getYear() - 1900;
+  t.tm_mon = date->getMonth() - 1;
+  t.tm_mday = date->getDay();
+  t.tm_hour = time->getHour();
+  t.tm_min = time->getMinute();
+  t.tm_sec = time->getSecond();
+  t.tm_isdst = -1;
+  return mktime(&t);
+}
+
 string DateTime::toString() {
   return date->toString() + " " + time->toString();
 }

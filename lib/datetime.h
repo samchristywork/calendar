@@ -79,6 +79,7 @@ public:
   int getHour() { return time->getHour(); }
   int getMinute() { return time->getMinute(); }
   int getSecond() { return time->getSecond(); }
+  int getEpoch();
   string toString();
 
 private:
