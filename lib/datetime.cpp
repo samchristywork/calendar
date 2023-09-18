@@ -83,6 +83,12 @@ DateTime::DateTime(string s) {
   time = new Time(tokens[1]);
 }
 
+DateTime::DateTime(int s) {
+  struct tm *t = localtime((time_t *)&s);
+  date = new Date(t->tm_year + 1900, t->tm_mon + 1, t->tm_mday);
+  time = new Time(t->tm_hour, t->tm_min, t->tm_sec);
+}
+
 void DateTime::delay(Duration d) {
   time->delay(d);
   if (time->getHour() == 0 && time->getMinute() == 0 &&

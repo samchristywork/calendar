@@ -68,6 +68,7 @@ private:
 class DateTime {
 public:
   DateTime(string s);
+  DateTime(int s);
   DateTime(int year, int month, int day, int hour, int minute, int second) {
     date = new Date(year, month, day);
     time = new Time(hour, minute, second);

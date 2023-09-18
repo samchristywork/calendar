@@ -19,6 +19,9 @@ void Event::offset(Duration d) {
   int eventEpoch = time->getEpoch();
   int offsetSeconds = d.getEpoch();
   int newEpoch = eventEpoch + offsetSeconds;
+
+  delete time;
+  time = new DateTime(newEpoch);
 }
 
 void Event::setName(string s) { name = s; }
