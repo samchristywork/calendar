@@ -46,8 +46,10 @@ void render(Calendar &cal) {
   int currentDay = localtime(&t)->tm_mday;
 
   setCursorPosition(0, 0);
+  cout << " Today: ";
+  cout << currentYear << "-" << currentMonth << "-" << currentDay;
+  cout << endl;
 
-  }
 
   setCursorPosition(0, 0);
 
