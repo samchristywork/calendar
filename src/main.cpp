@@ -23,6 +23,16 @@ void resetTerminal() {
   tcsetattr(STDIN_FILENO, TCSANOW, &t);
 }
 
+void invertColors() { cout << "\033[7m"; }
+
+void resetColors() { cout << "\033[0m"; }
+
+void makeCursorInvisible() { cout << "\033[?25l"; }
+
+void makeCursorVisible() { cout << "\033[?25h"; }
+
+void yellow() { cout << "\033[33m"; }
+
 
 int main() {
   time_t t = time(NULL);
