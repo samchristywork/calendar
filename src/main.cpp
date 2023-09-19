@@ -1,6 +1,14 @@
 #include <cal.h>
 #include <iostream>
+#include <termios.h>
 #include <time.h>
+#include <unistd.h>
+#include <vector>
+
+void alternateScreen() { cout << "\033[?1049h\033[H"; }
+
+void normalScreen() { cout << "\033[?1049l"; }
+
 
 int main() {
   time_t t = time(NULL);
