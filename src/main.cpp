@@ -44,16 +44,38 @@ void render(Calendar &cal) {
   int currentYear = localtime(&t)->tm_year + 1900;
   int currentMonth = localtime(&t)->tm_mon + 1;
   int currentDay = localtime(&t)->tm_mday;
+  int currentHour = localtime(&t)->tm_hour;
+  int currentMinute = localtime(&t)->tm_min;
+  int currentSecond = localtime(&t)->tm_sec;
 
   setCursorPosition(0, 0);
   cout << " Today: ";
   cout << currentYear << "-" << currentMonth << "-" << currentDay;
+  cout << " ";
+  cout << currentHour << ":" << currentMinute << ":" << currentSecond;
   cout << endl;
 
 
   setCursorPosition(0, 0);
 
   makeCursorVisible();
+}
+
+char readWithTimeout() {
+  struct timeval tv;
+  fd_set fds;
+  tv.tv_sec = 0;
+  tv.tv_usec = 100000;
+  FD_ZERO(&fds);
+  FD_SET(STDIN_FILENO, &fds);
+  select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
+  if (FD_ISSET(STDIN_FILENO, &fds)) {
+    char c;
+    cin >> c;
+    return c;
+  } else {
+    return 0;
+  }
 }
 
 int main() {
