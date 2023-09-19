@@ -9,6 +9,20 @@ void alternateScreen() { cout << "\033[?1049h\033[H"; }
 
 void normalScreen() { cout << "\033[?1049l"; }
 
+void setRawTerminal() {
+  struct termios t;
+  tcgetattr(STDIN_FILENO, &t);
+  t.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &t);
+}
+
+void resetTerminal() {
+  struct termios t;
+  tcgetattr(STDIN_FILENO, &t);
+  t.c_lflag |= (ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &t);
+}
+
 
 int main() {
   time_t t = time(NULL);
