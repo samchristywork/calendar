@@ -23,6 +23,10 @@ void resetTerminal() {
   tcsetattr(STDIN_FILENO, TCSANOW, &t);
 }
 
+void setCursorPosition(int x, int y) {
+  cout << "\033[" << y << ";" << x << "H";
+}
+
 void invertColors() { cout << "\033[7m"; }
 
 void resetColors() { cout << "\033[0m"; }
@@ -33,25 +37,38 @@ void makeCursorVisible() { cout << "\033[?25h"; }
 
 void yellow() { cout << "\033[33m"; }
 
+void render(Calendar &cal) {
+  makeCursorInvisible();
 
-int main() {
   time_t t = time(NULL);
   int currentYear = localtime(&t)->tm_year + 1900;
   int currentMonth = localtime(&t)->tm_mon + 1;
   int currentDay = localtime(&t)->tm_mday;
 
-  Calendar cal;
-  cal.readFromFile("calendar.txt");
+  setCursorPosition(0, 0);
 
-  DateTime start(currentYear, currentMonth, currentDay, 0, 0, 0);
-  DateTime end(currentYear, currentMonth, currentDay, 23, 59, 59);
-  auto events = cal.getEventsBetween(start, end);
-  for (unsigned int i = 0; i < events.size(); i++) {
-    cout << events[i]->toString() << endl;
   }
 
+  setCursorPosition(0, 0);
+
+  makeCursorVisible();
+}
+
+int main() {
+  Calendar cal;
+
+  // Deserialization
+  cal.readFromFile("calendar.txt");
+
+  // Adding events
   cal.addEvent(new Event("Foo", new DateTime(2023, 1, 1, 0, 0, 0),
                          new Duration(1, 0, 0)));
+
+  alternateScreen();
+  setRawTerminal();
+
+  resetTerminal();
+  normalScreen();
 
   cal.writeToFile("calendar2.txt");
 }
