@@ -120,13 +120,18 @@ char readInput() {
   return c;
 }
 
+string readLine() {
+  string s;
+  getline(cin, s);
+  return s;
+}
+
 void addEvent(Calendar &cal) {
   resetTerminal();
   normalScreen();
 
-  string name;
   cout << "Name: ";
-  cin >> name;
+  string name = readLine();
 
   int s = time(NULL);
 
@@ -172,5 +177,5 @@ int main() {
   resetTerminal();
   normalScreen();
 
-  cal.writeToFile("calendar2.txt");
+  cal.writeToFile("calendar.txt");
 }
