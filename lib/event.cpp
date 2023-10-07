@@ -26,6 +26,17 @@ void Event::offset(Duration d) {
 
 void Event::setName(string s) { name = s; }
 
+bool Event::equals(DateTime dt) {
+  if (time->getYear() == dt.getYear() && time->getMonth() == dt.getMonth() &&
+      time->getDay() == dt.getDay() && time->getHour() == dt.getHour() &&
+      time->getMinute() == dt.getMinute() &&
+      time->getSecond() == dt.getSecond()) {
+    return true;
+  }
+
+  return false;
+}
+
 bool Event::isAfter(DateTime dt) {
   if (time->getYear() > dt.getYear()) {
     return true;
