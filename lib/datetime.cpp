@@ -83,8 +83,8 @@ DateTime::DateTime(string s) {
   time = new Time(tokens[1]);
 }
 
-DateTime::DateTime(int s) {
-  struct tm *t = localtime((time_t *)&s);
+DateTime::DateTime(time_t s) {
+  struct tm *t = localtime(&s);
   date = new Date(t->tm_year + 1900, t->tm_mon + 1, t->tm_mday);
   time = new Time(t->tm_hour, t->tm_min, t->tm_sec);
 }

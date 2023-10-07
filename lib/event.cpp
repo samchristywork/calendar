@@ -18,7 +18,7 @@ void Event::delay(Duration d) {
 void Event::offset(Duration d) {
   int eventEpoch = time->getEpoch();
   int offsetSeconds = d.getEpoch();
-  int newEpoch = eventEpoch + offsetSeconds;
+  time_t newEpoch = eventEpoch + offsetSeconds;
 
   delete time;
   time = new DateTime(newEpoch);
