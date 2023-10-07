@@ -37,6 +37,14 @@ void makeCursorVisible() { cout << "\033[?25h"; }
 
 void yellow() { cout << "\033[33m"; }
 
+string pad(int n, size_t width) {
+  string s = to_string(n);
+  while (s.length() < width) {
+    s = "0" + s;
+  }
+  return s;
+}
+
 void render(Calendar &cal) {
   makeCursorInvisible();
 
@@ -50,9 +58,9 @@ void render(Calendar &cal) {
 
   setCursorPosition(0, 0);
   cout << " Today: ";
-  cout << year << "-" << month << "-" << day;
+  cout << year << "-" << pad(month, 2) << "-" << pad(day, 2);
   cout << " ";
-  cout << hour << ":" << minute << ":" << second;
+  cout << hour << ":" << pad(minute, 2) << ":" << pad(second, 2);
   cout << endl;
 
   for (int i = 0; i < 24; i++) {
