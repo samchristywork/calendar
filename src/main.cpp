@@ -114,6 +114,12 @@ char readWithTimeout() {
   }
 }
 
+char readInput() {
+  char c;
+  cin >> c;
+  return c;
+}
+
 void addEvent(Calendar &cal) {
   resetTerminal();
   normalScreen();
@@ -134,6 +140,22 @@ void addEvent(Calendar &cal) {
   setRawTerminal();
 }
 
+void eventLoop(Calendar &cal) {
+  char c = 0;
+  while (true) {
+    if (c == 'q') {
+      break;
+    } else if (c == 'a') {
+      addEvent(cal);
+      render(cal);
+    } else {
+      render(cal);
+    }
+
+    c = readInput();
+  }
+}
+
 int main() {
   Calendar cal;
 
@@ -146,7 +168,7 @@ int main() {
 
   alternateScreen();
   setRawTerminal();
-
+  eventLoop(cal);
   resetTerminal();
   normalScreen();
 
