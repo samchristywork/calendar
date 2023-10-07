@@ -55,6 +55,25 @@ void render(Calendar &cal) {
   cout << currentHour << ":" << currentMinute << ":" << currentSecond;
   cout << endl;
 
+  for (int i = 0; i < 24; i++) {
+    setCursorPosition(0, i + 3);
+
+    if (i < 10) {
+      cout << " ";
+    }
+    cout << i << ":00\t";
+
+    DateTime start(currentYear, currentMonth, currentDay, i, 0, 0);
+    DateTime end(currentYear, currentMonth, currentDay, i, 59, 59);
+
+    vector<Event *> events = cal.getEventsBetween(start, end);
+
+    if (events.size() > 0) {
+      cout << events[0]->toString();
+    }
+
+    cout << endl;
+  }
 
   setCursorPosition(0, 0);
 
