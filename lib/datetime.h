@@ -36,6 +36,9 @@ public:
   int getYear() { return year; }
   int getMonth() { return month; }
   int getDay() { return day; }
+  void setYear(int year) { this->year = year; }
+  void setMonth(int month) { this->month = month; }
+  void setDay(int day) { this->day = day; }
   void delay(int year, int month, int day);
   string toString();
 
@@ -57,6 +60,9 @@ public:
   int getHour() { return hour; }
   int getMinute() { return minute; }
   int getSecond() { return second; }
+  void setHour(int hour) { this->hour = hour; }
+  void setMinute(int minute) { this->minute = minute; }
+  void setSecond(int second) { this->second = second; }
   string toString();
 
 private:
@@ -80,6 +86,12 @@ public:
   int getHour() { return time->getHour(); }
   int getMinute() { return time->getMinute(); }
   int getSecond() { return time->getSecond(); }
+  void setYear(int year) { date->setYear(year); }
+  void setMonth(int month) { date->setMonth(month); }
+  void setDay(int day) { date->setDay(day); }
+  void setHour(int hour) { time->setHour(hour); }
+  void setMinute(int minute) { time->setMinute(minute); }
+  void setSecond(int second) { time->setSecond(second); }
   int getEpoch();
   string toString();
 
