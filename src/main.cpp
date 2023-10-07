@@ -41,24 +41,24 @@ void render(Calendar &cal) {
   makeCursorInvisible();
 
   time_t t = time(NULL);
-  int currentYear = localtime(&t)->tm_year + 1900;
-  int currentMonth = localtime(&t)->tm_mon + 1;
-  int currentDay = localtime(&t)->tm_mday;
-  int currentHour = localtime(&t)->tm_hour;
-  int currentMinute = localtime(&t)->tm_min;
-  int currentSecond = localtime(&t)->tm_sec;
+  int year = localtime(&t)->tm_year + 1900;
+  int month = localtime(&t)->tm_mon + 1;
+  int day = localtime(&t)->tm_mday;
+  int hour = localtime(&t)->tm_hour;
+  int minute = localtime(&t)->tm_min;
+  int second = localtime(&t)->tm_sec;
 
   setCursorPosition(0, 0);
   cout << " Today: ";
-  cout << currentYear << "-" << currentMonth << "-" << currentDay;
+  cout << year << "-" << month << "-" << day;
   cout << " ";
-  cout << currentHour << ":" << currentMinute << ":" << currentSecond;
+  cout << hour << ":" << minute << ":" << second;
   cout << endl;
 
   for (int i = 0; i < 24; i++) {
     setCursorPosition(0, i + 3);
 
-    if (currentHour == i) {
+    if (hour == i) {
       invertColors();
     }
 
@@ -67,8 +67,8 @@ void render(Calendar &cal) {
     }
     cout << i << ":00\t";
 
-    DateTime start(currentYear, currentMonth, currentDay, i, 0, 0);
-    DateTime end(currentYear, currentMonth, currentDay, i, 59, 59);
+    DateTime start(year, month, day, i, 0, 0);
+    DateTime end(year, month, day, i, 59, 59);
 
     vector<Event *> events = cal.getEventsBetween(start, end);
     if (events.size() > 1) {
