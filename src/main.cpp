@@ -58,6 +58,10 @@ void render(Calendar &cal) {
   for (int i = 0; i < 24; i++) {
     setCursorPosition(0, i + 3);
 
+    if (currentHour == i) {
+      invertColors();
+    }
+
     if (i < 10) {
       cout << " ";
     }
@@ -67,10 +71,15 @@ void render(Calendar &cal) {
     DateTime end(currentYear, currentMonth, currentDay, i, 59, 59);
 
     vector<Event *> events = cal.getEventsBetween(start, end);
+    if (events.size() > 1) {
+      yellow();
+    }
 
     if (events.size() > 0) {
       cout << events[0]->toString();
     }
+
+    resetColors();
 
     cout << endl;
   }
