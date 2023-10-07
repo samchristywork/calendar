@@ -106,6 +106,26 @@ char readWithTimeout() {
   }
 }
 
+void addEvent(Calendar &cal) {
+  resetTerminal();
+  normalScreen();
+
+  string name;
+  cout << "Name: ";
+  cin >> name;
+
+  int s = time(NULL);
+
+  DateTime *dt = new DateTime(s);
+  dt->setSecond(0);
+  dt->setMinute(0);
+  Event *e = new Event(name, dt, new Duration(1, 0, 0));
+  cal.addEvent(e);
+
+  alternateScreen();
+  setRawTerminal();
+}
+
 int main() {
   Calendar cal;
 
