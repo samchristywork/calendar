@@ -48,7 +48,8 @@ vector<Event *> Calendar::getEventsBetween(DateTime start, DateTime end) {
   vector<Event *> eventsBetween;
 
   for (unsigned int i = 0; i < events.size(); i++) {
-    if (events[i]->isAfter(start) && events[i]->isBefore(end)) {
+    if (events[i]->equals(start) ||
+        (events[i]->isAfter(start) && events[i]->isBefore(end))) {
       eventsBetween.push_back(events[i]);
     }
   }
