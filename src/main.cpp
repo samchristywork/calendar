@@ -5,6 +5,8 @@
 #include <unistd.h>
 #include <vector>
 
+Event *toBeAdded = NULL;
+
 void alternateScreen() { cout << "\033[?1049h\033[H"; }
 
 void normalScreen() { cout << "\033[?1049l"; }
@@ -138,20 +140,27 @@ string readLine() {
   return s;
 }
 
-void addEvent(Calendar &cal) {
+void generateEvent(Calendar &cal) {
   resetTerminal();
   normalScreen();
 
   cout << "Name: ";
   string name = readLine();
 
+  cout << "Duration (hours): ";
+  string durationHours = readLine();
+  int durationHoursInt = stoi(durationHours);
+  cout << "Duration (minutes): ";
+  string durationMinutes = readLine();
+  int durationMinutesInt = stoi(durationMinutes);
+
   int s = time(NULL);
 
   DateTime *dt = new DateTime(s);
   dt->setSecond(0);
-  dt->setMinute(0);
-  Event *e = new Event(name, dt, new Duration(1, 0, 0));
-  cal.addEvent(e);
+  dt->setMinute(dt->getMinute() / 15 * 15);
+  toBeAdded = new Event(name, dt,
+                        new Duration(durationHoursInt, durationMinutesInt, 0));
 
   alternateScreen();
   setRawTerminal();
@@ -163,7 +172,17 @@ void eventLoop(Calendar &cal) {
     if (c == 'q') {
       break;
     } else if (c == 'a') {
-      addEvent(cal);
+      generateEvent(cal);
+      render(cal);
+    } else if (c == 'j') {
+      toBeAdded->offset(Duration(0, -15, 0));
+      render(cal);
+    } else if (c == 'k') {
+      toBeAdded->offset(Duration(0, 15, 0));
+      render(cal);
+    } else if (c == 'm') {
+      cal.addEvent(toBeAdded);
+      toBeAdded = NULL;
       render(cal);
     } else {
       render(cal);
