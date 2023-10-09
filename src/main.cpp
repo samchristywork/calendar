@@ -63,25 +63,31 @@ void render(Calendar &cal) {
   cout << hour << ":" << pad(minute, 2) << ":" << pad(second, 2);
   cout << endl;
 
-  for (int i = 0; i < 24; i++) {
-    setCursorPosition(0, i + 3);
+  int start = 16;
+  int end = 24;
+  for (int i = start * 4; i < end * 4; i++) {
+    setCursorPosition(0, (i - start * 4) + 4);
 
-    if (hour == i) {
+    int h = i / 4;
+    int m = i % 4;
+
+    if (hour == h) {
       invertColors();
     }
 
-    if (i < 10) {
+    if (i < h) {
       cout << " ";
     }
-    cout << i << ":00\t";
 
-    DateTime start(year, month, day, i, 0, 0);
-    DateTime end(year, month, day, i, 59, 59);
+    cout << h << "\t";
 
-    vector<Event *> events = cal.getEventsBetween(start, end);
-    if (events.size() > 1) {
-      yellow();
+    DateTime start(year, month, day, h, m * 15, 0);
+    DateTime end(year, month, day, h, m * 15 + 14, 59);
+
+    {
     }
+
+    vector<Event *> events = cal.getEventsStartingBetween(start, end);
 
     if (events.size() > 0) {
       cout << events[0]->toString();
@@ -167,9 +173,6 @@ int main() {
   // Deserialization
   cal.readFromFile("calendar.txt");
 
-  // Adding events
-  cal.addEvent(new Event("Foo", new DateTime(2023, 1, 1, 0, 0, 0),
-                         new Duration(1, 0, 0)));
 
   alternateScreen();
   setRawTerminal();
