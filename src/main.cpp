@@ -60,19 +60,13 @@ void render(Calendar &cal) {
   int day = localtime(&t)->tm_mday;
   int hour = localtime(&t)->tm_hour;
   int minute = localtime(&t)->tm_min;
-  int second = localtime(&t)->tm_sec;
 
   setCursorPosition(0, 0);
-  cout << " Today: ";
-  cout << year << "-" << pad(month, 2) << "-" << pad(day, 2);
-  cout << " ";
-  cout << hour << ":" << pad(minute, 2) << ":" << pad(second, 2);
-  cout << endl;
 
-  int start = 16;
-  int end = 24;
+  int start = 8;
+  int end = 20;
   for (int i = start * 4; i < end * 4; i++) {
-    setCursorPosition(0, (i - start * 4) + 4);
+    setCursorPosition(0, (i - start * 4) + 1);
 
     int h = i / 4;
     int m = i % 4;
