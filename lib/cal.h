@@ -15,7 +15,8 @@ public:
   string serialize();
   void readFromFile(string filename);
   void writeToFile(string filename);
-  vector<Event *> getEventsBetween(DateTime start, DateTime end);
+  vector<Event *> getEventsStartingBetween(DateTime start, DateTime end);
+  vector<Event *> getEventsAtTime(DateTime t);
 
 private:
   vector<Event *> events;

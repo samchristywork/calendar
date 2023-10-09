@@ -44,7 +44,8 @@ void Calendar::writeToFile(string filename) {
   file << serialize();
 }
 
-vector<Event *> Calendar::getEventsBetween(DateTime start, DateTime end) {
+vector<Event *> Calendar::getEventsStartingBetween(DateTime start,
+                                                   DateTime end) {
   vector<Event *> eventsBetween;
 
   for (unsigned int i = 0; i < events.size(); i++) {
@@ -55,4 +56,16 @@ vector<Event *> Calendar::getEventsBetween(DateTime start, DateTime end) {
   }
 
   return eventsBetween;
+}
+
+vector<Event *> Calendar::getEventsAtTime(DateTime t) {
+  vector<Event *> e;
+
+  for (unsigned int i = 0; i < events.size(); i++) {
+    if (events[i]->isDuring(t)) {
+      e.push_back(events[i]);
+    }
+  }
+
+  return e;
 }
