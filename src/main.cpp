@@ -71,7 +71,14 @@ void render(Calendar &cal) {
     int h = i / 4;
     int m = i % 4;
 
-    if (hour == h) {
+    DateTime start(year, month, day, h, m * 15, 0);
+    DateTime end(year, month, day, h, m * 15 + 14, 59);
+
+    if (toBeAdded != NULL && toBeAdded->isDuring(start)) {
+      green();
+    }
+
+    if (hour == h && minute / 15 == m) {
       invertColors();
     }
 
@@ -79,10 +86,7 @@ void render(Calendar &cal) {
       cout << " ";
     }
 
-    cout << h << ":" << pad(m * 15, 2) << "\t";
-
-    DateTime start(year, month, day, h, m * 15, 0);
-    DateTime end(year, month, day, h, m * 15 + 14, 59);
+    cout << h << ":" << pad(m * 15, 2) << "  ";
 
     {
       vector<Event *> events = cal.getEventsAtTime(start);
@@ -96,7 +100,9 @@ void render(Calendar &cal) {
     vector<Event *> events = cal.getEventsStartingBetween(start, end);
 
     if (events.size() > 0) {
-      cout << events[0]->toString();
+      cout << events[0]->getDuration()->toString();
+      cout << "  ";
+      cout << events[0]->getName();
     }
 
     resetColors();
