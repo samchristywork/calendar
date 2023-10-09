@@ -7,6 +7,8 @@
 
 Event *toBeAdded = NULL;
 
+void clearScreen() { cout << "\033[2J"; }
+
 void alternateScreen() { cout << "\033[?1049h\033[H"; }
 
 void normalScreen() { cout << "\033[?1049l"; }
@@ -38,6 +40,8 @@ void makeCursorInvisible() { cout << "\033[?25l"; }
 void makeCursorVisible() { cout << "\033[?25h"; }
 
 void yellow() { cout << "\033[33m"; }
+
+void green() { cout << "\033[32m"; }
 
 string pad(int n, size_t width) {
   string s = to_string(n);
@@ -200,6 +204,7 @@ int main() {
 
 
   alternateScreen();
+  clearScreen();
   setRawTerminal();
   eventLoop(cal);
   resetTerminal();

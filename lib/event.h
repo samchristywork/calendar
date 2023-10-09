@@ -21,6 +21,8 @@ public:
   bool isAfter(DateTime dt);
   bool isBefore(DateTime dt);
   bool isDuring(DateTime dt);
+  Duration *getDuration() { return duration; }
+  string getName() { return name; }
   string toString();
 
 private:
