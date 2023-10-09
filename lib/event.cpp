@@ -98,7 +98,7 @@ bool Event::isDuring(DateTime dt) {
   int eventEnd = eventStart + duration->getEpoch();
   int dtStart = dt.getEpoch();
 
-  if (dtStart >= eventStart && dtStart <= eventEnd) {
+  if (dtStart >= eventStart && dtStart < eventEnd) {
     return true;
   }
 
