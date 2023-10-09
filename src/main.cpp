@@ -91,9 +91,9 @@ void render(Calendar &cal) {
     {
       vector<Event *> events = cal.getEventsAtTime(start);
       if (events.size() > 0) {
-        cout << "x\t";
+        cout << events.size() << "  ";
       } else {
-        cout << " \t";
+        cout << "   ";
       }
     }
 
