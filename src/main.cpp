@@ -82,7 +82,7 @@ void render(Calendar &cal) {
       invertColors();
     }
 
-    if (i < h) {
+    if (h < 10) {
       cout << " ";
     }
 
