@@ -79,12 +79,18 @@ void render(Calendar &cal) {
       cout << " ";
     }
 
-    cout << h << "\t";
+    cout << h << ":" << pad(m * 15, 2) << "\t";
 
     DateTime start(year, month, day, h, m * 15, 0);
     DateTime end(year, month, day, h, m * 15 + 14, 59);
 
     {
+      vector<Event *> events = cal.getEventsAtTime(start);
+      if (events.size() > 0) {
+        cout << "x\t";
+      } else {
+        cout << " \t";
+      }
     }
 
     vector<Event *> events = cal.getEventsStartingBetween(start, end);
