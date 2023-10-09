@@ -144,7 +144,7 @@ string readLine() {
   return s;
 }
 
-void generateEvent(Calendar &cal) {
+void generateEvent() {
   resetTerminal();
   normalScreen();
 
@@ -176,18 +176,24 @@ void eventLoop(Calendar &cal) {
     if (c == 'q') {
       break;
     } else if (c == 'a') {
-      generateEvent(cal);
-      render(cal);
-    } else if (c == 'j') {
-      toBeAdded->offset(Duration(0, -15, 0));
+      generateEvent();
       render(cal);
     } else if (c == 'k') {
-      toBeAdded->offset(Duration(0, 15, 0));
-      render(cal);
+      if (toBeAdded != NULL) {
+        toBeAdded->offset(Duration(0, -15, 0));
+        render(cal);
+      }
+    } else if (c == 'j') {
+      if (toBeAdded != NULL) {
+        toBeAdded->offset(Duration(0, 15, 0));
+        render(cal);
+      }
     } else if (c == 'm') {
-      cal.addEvent(toBeAdded);
-      toBeAdded = NULL;
-      render(cal);
+      if (toBeAdded != NULL) {
+        cal.addEvent(toBeAdded);
+        toBeAdded = NULL;
+        render(cal);
+      }
     } else {
       render(cal);
     }
