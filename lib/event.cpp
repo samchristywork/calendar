@@ -93,6 +93,18 @@ bool Event::isBefore(DateTime dt) {
   return false;
 }
 
+bool Event::isDuring(DateTime dt) {
+  int eventStart = time->getEpoch();
+  int eventEnd = eventStart + duration->getEpoch();
+  int dtStart = dt.getEpoch();
+
+  if (dtStart >= eventStart && dtStart <= eventEnd) {
+    return true;
+  }
+
+  return false;
+}
+
 string Event::toString() {
   return name + "\t" + time->toString() + "\t" + duration->toString();
 }

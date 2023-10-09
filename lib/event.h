@@ -20,6 +20,7 @@ public:
   bool equals(DateTime dt);
   bool isAfter(DateTime dt);
   bool isBefore(DateTime dt);
+  bool isDuring(DateTime dt);
   string toString();
 
 private:
