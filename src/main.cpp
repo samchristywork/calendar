@@ -1,11 +1,14 @@
 #include <cal.h>
 #include <iostream>
+#include <stdlib.h>
+#include <strings.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
 #include <vector>
 
 Event *toBeAdded = NULL;
+int scroll = 4;
 
 void clearScreen() { cout << "\033[2J"; }
 
@@ -63,10 +66,10 @@ void render(Calendar &cal) {
 
   setCursorPosition(0, 0);
 
-  int start = 8;
-  int end = 20;
+  int start = 8 + scroll;
+  int end = 20 + scroll;
   for (int i = start * 4; i < end * 4; i++) {
-    setCursorPosition(0, (i - start * 4) + 1);
+    setCursorPosition(0, (i - start * 4) + 2);
 
     int h = i / 4;
     int m = i % 4;
@@ -154,6 +157,7 @@ void generateEvent() {
   cout << "Duration (hours): ";
   string durationHours = readLine();
   int durationHoursInt = stoi(durationHours);
+
   cout << "Duration (minutes): ";
   string durationMinutes = readLine();
   int durationMinutesInt = stoi(durationMinutes);
@@ -194,6 +198,14 @@ void eventLoop(Calendar &cal) {
         toBeAdded = NULL;
         render(cal);
       }
+    } else if (checkInput(27, 91, 65, 0)) {
+      clearScreen();
+      scroll--;
+      render(cal);
+    } else if (checkInput(27, 91, 66, 0)) {
+      clearScreen();
+      scroll++;
+      render(cal);
     } else {
       render(cal);
     }
@@ -207,7 +219,6 @@ int main() {
 
   // Deserialization
   cal.readFromFile("calendar.txt");
-
 
   alternateScreen();
   clearScreen();
