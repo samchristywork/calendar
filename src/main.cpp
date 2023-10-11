@@ -161,6 +161,14 @@ bool checkInput(char c) {
   return false;
 }
 
+bool checkInput(int c1, int c2, int c3, int c4) {
+  if (lastInput[0] == c1 && lastInput[1] == c2 && lastInput[2] == c3 &&
+      lastInput[3] == c4) {
+    return true;
+  }
+  return false;
+}
+
 void eventLoop(Calendar &cal) {
   while (true) {
     if (checkInput('q')) {
