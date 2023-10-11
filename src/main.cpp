@@ -1,13 +1,6 @@
 #include <cal.h>
-#include <iostream>
-#include <stdlib.h>
 #include <strings.h>
-#include <sys/ioctl.h>
 #include <terminal.h>
-#include <termios.h>
-#include <time.h>
-#include <unistd.h>
-#include <vector>
 
 Event *toBeAdded = NULL;
 char lastInput[4] = {0, 0, 0, 0};

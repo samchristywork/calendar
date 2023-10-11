@@ -2,6 +2,7 @@
 #define TERMINAL_H
 
 #include <iostream>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -42,5 +43,17 @@ inline void makeCursorVisible() { cout << "\033[?25h"; }
 inline void yellow() { cout << "\033[33m"; }
 
 inline void green() { cout << "\033[32m"; }
+
+inline int getScreenHeight() {
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  return w.ws_row;
+}
+
+inline int getScreenWidth() {
+  struct winsize w;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+  return w.ws_col;
+}
 
 #endif
