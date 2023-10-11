@@ -104,6 +104,7 @@ void render(Calendar &cal) {
   setCursorPosition(0, 0);
 
   makeCursorVisible();
+  fflush(stdout);
 }
 
 void readInput() {
