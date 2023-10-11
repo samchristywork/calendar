@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <strings.h>
+#include <sys/ioctl.h>
 #include <terminal.h>
 #include <termios.h>
 #include <time.h>
@@ -11,7 +12,7 @@
 Event *toBeAdded = NULL;
 char lastInput[4] = {0, 0, 0, 0};
 string statusline = "";
-int scroll = 4;
+int scroll = -2;
 string currentActivity = "";
 
 string leftPad(string s, size_t width, char c) {
@@ -28,74 +29,76 @@ string rightPad(string s, size_t width, char c) {
   return s;
 }
 
+void renderLine(Calendar &cal, DateTime currentTime, int width) {
+  if (time(NULL) / 900 == currentTime.getEpoch() / 900) {
+    invertColors();
+  }
+
+  if (toBeAdded != NULL &&
+      toBeAdded->isDuring(DateTime(currentTime.getEpoch()))) {
+    green();
+  }
+
+  int h = currentTime.getHour();
+  int m = currentTime.getMinute();
+
+  cout << leftPad(to_string(h), 2, ' ') << ":";
+  cout << leftPad(to_string(m), 2, '0') << "  ";
+
+  {
+    vector<Event *> events = cal.getEventsAtTime(currentTime);
+    if (events.size() > 0) {
+      cout << events.size() << "  ";
+    } else {
+      cout << "   ";
+    }
+  }
+
+  DateTime start = currentTime;
+  DateTime end = DateTime(currentTime.getEpoch() + 15 * 60);
+
+  vector<Event *> events = cal.getEventsStartingBetween(start, end);
+
+  if (events.size() > 0) {
+    cout << events[0]->getDuration()->toString();
+    cout << "  ";
+    cout << events[0]->getName();
+  }
+
+  resetColors();
+}
+
 void render(Calendar &cal) {
   vector<Event *> currentEvents = cal.getEventsAtTime(DateTime(time(NULL)));
   if (currentEvents.size() > 0) {
     string name = currentEvents[0]->getName();
     if (name != currentActivity) {
       currentActivity = name;
-      string command = "espeak -v en \"" + name + "\"";
+      string command = "espeak -v en \"" + name + "\" &";
       system(command.c_str());
     }
   }
 
-  makeCursorInvisible();
+  int height = getScreenHeight();
+  int width = getScreenWidth();
 
-  time_t t = time(NULL);
-  int year = localtime(&t)->tm_year + 1900;
-  int month = localtime(&t)->tm_mon + 1;
-  int day = localtime(&t)->tm_mday;
-  int hour = localtime(&t)->tm_hour;
-  int minute = localtime(&t)->tm_min;
+  makeCursorInvisible();
 
   setCursorPosition(0, 0);
   cout << statusline;
 
-  int start = 8 + scroll;
-  int end = 20 + scroll;
-  for (int i = start * 4; i < end * 4; i++) {
-    setCursorPosition(0, (i - start * 4) + 2);
+  for (int y = 2; y < height; y++) {
+    int offset = y - 2 - 8 + scroll;
 
-    int h = i / 4;
-    int m = i % 4;
+    DateTime currentTime = DateTime(time(NULL));
+    currentTime.setMinute(0);
+    currentTime.setSecond(0);
+    int epoch = currentTime.getEpoch();
+    epoch += offset * 15 * 60;
+    currentTime = DateTime(epoch);
 
-    DateTime start(year, month, day, h, m * 15, 0);
-    DateTime end(year, month, day, h, m * 15 + 14, 59);
-
-    if (toBeAdded != NULL && toBeAdded->isDuring(start)) {
-      green();
-    }
-
-    if (hour == h && minute / 15 == m) {
-      invertColors();
-    }
-
-    if (h < 10) {
-      cout << " ";
-    }
-
-    cout << h % 24 << ":" << leftPad(to_string(m * 15), 2, '0') << "  ";
-
-    {
-      vector<Event *> events = cal.getEventsAtTime(start);
-      if (events.size() > 0) {
-        cout << events.size() << "  ";
-      } else {
-        cout << "   ";
-      }
-    }
-
-    vector<Event *> events = cal.getEventsStartingBetween(start, end);
-
-    if (events.size() > 0) {
-      cout << events[0]->getDuration()->toString();
-      cout << "  ";
-      cout << events[0]->getName();
-    }
-
-    resetColors();
-
-    cout << endl;
+    setCursorPosition(0, y);
+    renderLine(cal, currentTime, width);
   }
 
   setCursorPosition(0, 0);
