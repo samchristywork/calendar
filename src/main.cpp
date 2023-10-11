@@ -58,6 +58,16 @@ string pad(int n, size_t width) {
 }
 
 void render(Calendar &cal) {
+  vector<Event *> currentEvents = cal.getEventsAtTime(DateTime(time(NULL)));
+  if (currentEvents.size() > 0) {
+    string name = currentEvents[0]->getName();
+    if (name != currentActivity) {
+      currentActivity = name;
+      string command = "espeak -v en \"" + name + "\"";
+      system(command.c_str());
+    }
+  }
+
   makeCursorInvisible();
 
   time_t t = time(NULL);
