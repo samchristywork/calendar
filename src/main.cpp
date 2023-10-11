@@ -12,6 +12,7 @@ string leftPad(string s, size_t width, char c) {
   while (s.length() < width) {
     s = c + s;
   }
+
   return s;
 }
 
@@ -19,6 +20,7 @@ string rightPad(string s, size_t width, char c) {
   while (s.length() < width) {
     s = s + c;
   }
+
   return s;
 }
 
@@ -35,15 +37,20 @@ void renderLine(Calendar &cal, DateTime currentTime, int width) {
   int h = currentTime.getHour();
   int m = currentTime.getMinute();
 
-  cout << leftPad(to_string(h), 2, ' ') << ":";
-  cout << leftPad(to_string(m), 2, '0') << "  ";
+  string line = "";
+
+  line += leftPad(to_string(h), 2, ' ');
+  line += ":";
+  line += leftPad(to_string(m), 2, '0');
+  line += "  ";
 
   {
     vector<Event *> events = cal.getEventsAtTime(currentTime);
     if (events.size() > 0) {
-      cout << events.size() << "  ";
+      line += to_string(events.size());
+      line += "  ";
     } else {
-      cout << "   ";
+      line += "   ";
     }
   }
 
@@ -53,10 +60,13 @@ void renderLine(Calendar &cal, DateTime currentTime, int width) {
   vector<Event *> events = cal.getEventsStartingBetween(start, end);
 
   if (events.size() > 0) {
-    cout << events[0]->getDuration()->toString();
-    cout << "  ";
-    cout << events[0]->getName();
+    line += events[0]->getDuration()->toString();
+    line += "  ";
+    line += events[0]->getName();
   }
+
+  line = line.substr(0, width);
+  cout << line;
 
   resetColors();
 }
