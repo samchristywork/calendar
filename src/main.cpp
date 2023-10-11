@@ -8,6 +8,7 @@
 #include <vector>
 
 Event *toBeAdded = NULL;
+char lastInput[4] = {0, 0, 0, 0};
 int scroll = 4;
 
 void clearScreen() { cout << "\033[2J"; }
@@ -118,33 +119,20 @@ void render(Calendar &cal) {
   makeCursorVisible();
 }
 
-char readWithTimeout() {
+void readInput() {
+  bzero(lastInput, 4);
+
   struct timeval tv;
   fd_set fds;
-  tv.tv_sec = 0;
-  tv.tv_usec = 100000;
+  tv.tv_sec = 1;
+  tv.tv_usec = 0;
   FD_ZERO(&fds);
   FD_SET(STDIN_FILENO, &fds);
   select(STDIN_FILENO + 1, &fds, NULL, NULL, &tv);
   if (FD_ISSET(STDIN_FILENO, &fds)) {
-    char c;
-    cin >> c;
-    return c;
-  } else {
-    return 0;
+    bzero(lastInput, 4);
+    read(STDIN_FILENO, lastInput, 4);
   }
-}
-
-char readInput() {
-  char c;
-  cin >> c;
-  return c;
-}
-
-string readLine() {
-  string s;
-  getline(cin, s);
-  return s;
 }
 
 void generateEvent() {
@@ -152,14 +140,17 @@ void generateEvent() {
   normalScreen();
 
   cout << "Name: ";
-  string name = readLine();
+  string name;
+  getline(cin, name);
 
   cout << "Duration (hours): ";
-  string durationHours = readLine();
+  string durationHours;
+  getline(cin, durationHours);
   int durationHoursInt = stoi(durationHours);
 
   cout << "Duration (minutes): ";
-  string durationMinutes = readLine();
+  string durationMinutes;
+  getline(cin, durationMinutes);
   int durationMinutesInt = stoi(durationMinutes);
 
   int s = time(NULL);
@@ -174,25 +165,32 @@ void generateEvent() {
   setRawTerminal();
 }
 
+bool checkInput(char c) {
+  if (lastInput[0] == c && lastInput[1] == 0 && lastInput[2] == 0 &&
+      lastInput[3] == 0) {
+    return true;
+  }
+  return false;
+}
+
 void eventLoop(Calendar &cal) {
-  char c = 0;
   while (true) {
-    if (c == 'q') {
+    if (checkInput('q')) {
       break;
-    } else if (c == 'a') {
+    } else if (checkInput('a')) {
       generateEvent();
       render(cal);
-    } else if (c == 'k') {
+    } else if (checkInput('k')) {
       if (toBeAdded != NULL) {
         toBeAdded->offset(Duration(0, -15, 0));
         render(cal);
       }
-    } else if (c == 'j') {
+    } else if (checkInput('j')) {
       if (toBeAdded != NULL) {
         toBeAdded->offset(Duration(0, 15, 0));
         render(cal);
       }
-    } else if (c == 'm') {
+    } else if (checkInput('m')) {
       if (toBeAdded != NULL) {
         cal.addEvent(toBeAdded);
         toBeAdded = NULL;
@@ -210,14 +208,12 @@ void eventLoop(Calendar &cal) {
       render(cal);
     }
 
-    c = readInput();
+    readInput();
   }
 }
 
 int main() {
   Calendar cal;
-
-  // Deserialization
   cal.readFromFile("calendar.txt");
 
   alternateScreen();
