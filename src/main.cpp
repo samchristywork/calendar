@@ -24,6 +24,16 @@ string rightPad(string s, size_t width, char c) {
   return s;
 }
 
+string fixedWidth(string s, size_t width) {
+  if (s.length() > width) {
+    s = s.substr(0, width);
+  } else {
+    s = rightPad(s, width, ' ');
+  }
+
+  return s;
+}
+
 void renderLine(Calendar &cal, DateTime currentTime, int width) {
   if (time(NULL) / 900 == currentTime.getEpoch() / 900) {
     invertColors();
@@ -65,10 +75,17 @@ void renderLine(Calendar &cal, DateTime currentTime, int width) {
     line += events[0]->getName();
   }
 
-  line = line.substr(0, width);
+  line = fixedWidth(line, width);
   cout << line;
 
   resetColors();
+}
+
+void clearLine(int y, int width) {
+  setCursorPosition(0, y);
+  for (int x = 0; x < width; x++) {
+    cout << " ";
+  }
 }
 
 void render(Calendar &cal) {
@@ -85,13 +102,16 @@ void render(Calendar &cal) {
   int height = getScreenHeight();
   int width = getScreenWidth();
 
+  clearLine(0, width);
+  clearLine(1, width);
+
   makeCursorInvisible();
 
   setCursorPosition(0, 0);
   cout << statusline;
 
-  for (int y = 2; y < height; y++) {
-    int offset = y - 2 - 8 + scroll;
+  for (int y = 3; y < height; y++) {
+    int offset = y - 3 - 8 + scroll;
 
     DateTime currentTime = DateTime(time(NULL));
     currentTime.setMinute(0);
@@ -199,11 +219,9 @@ void eventLoop(Calendar &cal) {
         render(cal);
       }
     } else if (checkInput(27, 91, 65, 0)) {
-      clearScreen();
       scroll--;
       render(cal);
     } else if (checkInput(27, 91, 66, 0)) {
-      clearScreen();
       scroll++;
       render(cal);
     } else {
