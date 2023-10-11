@@ -49,10 +49,16 @@ void yellow() { cout << "\033[33m"; }
 
 void green() { cout << "\033[32m"; }
 
-string pad(int n, size_t width) {
-  string s = to_string(n);
+string leftPad(string s, size_t width, char c) {
   while (s.length() < width) {
-    s = "0" + s;
+    s = c + s;
+  }
+  return s;
+}
+
+string rightPad(string s, size_t width, char c) {
+  while (s.length() < width) {
+    s = s + c;
   }
   return s;
 }
@@ -103,7 +109,7 @@ void render(Calendar &cal) {
       cout << " ";
     }
 
-    cout << h << ":" << pad(m * 15, 2) << "  ";
+    cout << h % 24 << ":" << leftPad(to_string(m * 15), 2, '0') << "  ";
 
     {
       vector<Event *> events = cal.getEventsAtTime(start);
