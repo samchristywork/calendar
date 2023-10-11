@@ -169,6 +169,8 @@ bool checkInput(int c1, int c2, int c3, int c4) {
   return false;
 }
 
+void save(Calendar &cal) { cal.writeToFile("calendar.txt"); }
+
 void eventLoop(Calendar &cal) {
   while (true) {
     if (checkInput('q')) {
@@ -190,6 +192,7 @@ void eventLoop(Calendar &cal) {
       if (toBeAdded != NULL) {
         cal.addEvent(toBeAdded);
         toBeAdded = NULL;
+        save(cal);
         render(cal);
       }
     } else if (checkInput(27, 91, 65, 0)) {
@@ -236,5 +239,5 @@ int main() {
   resetTerminal();
   normalScreen();
 
-  cal.writeToFile("calendar.txt");
+  save(cal);
 }
