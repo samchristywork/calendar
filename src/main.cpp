@@ -2,6 +2,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <strings.h>
+#include <terminal.h>
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
@@ -12,42 +13,6 @@ char lastInput[4] = {0, 0, 0, 0};
 string statusline = "";
 int scroll = 4;
 string currentActivity = "";
-
-void clearScreen() { cout << "\033[2J"; }
-
-void alternateScreen() { cout << "\033[?1049h\033[H"; }
-
-void normalScreen() { cout << "\033[?1049l"; }
-
-void setRawTerminal() {
-  struct termios t;
-  tcgetattr(STDIN_FILENO, &t);
-  t.c_lflag &= ~(ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &t);
-}
-
-void resetTerminal() {
-  struct termios t;
-  tcgetattr(STDIN_FILENO, &t);
-  t.c_lflag |= (ICANON | ECHO);
-  tcsetattr(STDIN_FILENO, TCSANOW, &t);
-}
-
-void setCursorPosition(int x, int y) {
-  cout << "\033[" << y << ";" << x << "H";
-}
-
-void invertColors() { cout << "\033[7m"; }
-
-void resetColors() { cout << "\033[0m"; }
-
-void makeCursorInvisible() { cout << "\033[?25l"; }
-
-void makeCursorVisible() { cout << "\033[?25h"; }
-
-void yellow() { cout << "\033[33m"; }
-
-void green() { cout << "\033[32m"; }
 
 string leftPad(string s, size_t width, char c) {
   while (s.length() < width) {
