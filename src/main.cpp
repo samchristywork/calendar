@@ -9,7 +9,9 @@
 
 Event *toBeAdded = NULL;
 char lastInput[4] = {0, 0, 0, 0};
+string statusline = "";
 int scroll = 4;
+string currentActivity = "";
 
 void clearScreen() { cout << "\033[2J"; }
 
@@ -66,6 +68,7 @@ void render(Calendar &cal) {
   int minute = localtime(&t)->tm_min;
 
   setCursorPosition(0, 0);
+  cout << statusline;
 
   int start = 8 + scroll;
   int end = 20 + scroll;
@@ -209,6 +212,23 @@ void eventLoop(Calendar &cal) {
     }
 
     readInput();
+
+    statusline = "";
+    statusline += "(";
+    statusline += to_string(lastInput[0]);
+    statusline += ", ";
+    statusline += to_string(lastInput[1]);
+    statusline += ", ";
+    statusline += to_string(lastInput[2]);
+    statusline += ", ";
+    statusline += to_string(lastInput[3]);
+    statusline += ") ";
+
+    vector<Event *> currentEvents = cal.getEventsAtTime(DateTime(time(NULL)));
+    if (currentEvents.size() > 0) {
+      statusline += currentEvents[0]->getName();
+      statusline += " ";
+    }
   }
 }
 
