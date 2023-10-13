@@ -5,9 +5,9 @@
 
 Event *selectedEvent = NULL;
 char lastInput[4] = {0, 0, 0, 0};
-string statusline = "";
 int scroll = -2;
 string currentActivity = "";
+string statusline = "";
 
 string leftPad(string s, size_t width, char c) {
   while (s.length() < width) {
@@ -173,8 +173,9 @@ void generateEvent(Calendar &cal) {
   DateTime *dt = new DateTime(s);
   dt->setSecond(0);
   dt->setMinute(dt->getMinute() / 15 * 15);
-  selectedEvent = new Event(
-      name, dt, new Duration(durationHoursInt, durationMinutesInt, 0));
+
+  Duration *duration = new Duration(durationHoursInt, durationMinutesInt, 0);
+  selectedEvent = new Event(name, dt, duration);
   cal.addEvent(selectedEvent);
 
   alternateScreen();
@@ -233,33 +234,41 @@ void selectPrevEvent(Calendar &cal) {
   }
 }
 
+bool handleEvent(Calendar &cal) {
+  if (checkInput('q')) {
+    return false;
+  } else if (checkInput('a')) {
+    generateEvent(cal);
+  } else if (checkInput('k')) {
+    if (selectedEvent != NULL) {
+      selectedEvent->offset(Duration(0, -15, 0));
+    }
+  } else if (checkInput('j')) {
+    if (selectedEvent != NULL) {
+      selectedEvent->offset(Duration(0, 15, 0));
+    }
+  } else if (checkInput(10)) {
+    if (selectedEvent != NULL) {
+      selectedEvent = NULL;
+      save(cal);
+    }
+  } else if (checkInput('n')) {
+    selectNextEvent(cal);
+  } else if (checkInput('p')) {
+    selectPrevEvent(cal);
+  } else if (checkInput(27, 91, 65, 0)) {
+    scroll--;
+  } else if (checkInput(27, 91, 66, 0)) {
+    scroll++;
+  }
+
+  return true;
+}
+
 void eventLoop(Calendar &cal) {
   while (true) {
-    if (checkInput('q')) {
+    if (!handleEvent(cal)) {
       break;
-    } else if (checkInput('a')) {
-      generateEvent(cal);
-    } else if (checkInput('k')) {
-      if (selectedEvent != NULL) {
-        selectedEvent->offset(Duration(0, -15, 0));
-      }
-    } else if (checkInput('j')) {
-      if (selectedEvent != NULL) {
-        selectedEvent->offset(Duration(0, 15, 0));
-      }
-    } else if (checkInput(10)) {
-      if (selectedEvent != NULL) {
-        selectedEvent = NULL;
-        save(cal);
-      }
-    } else if (checkInput('n')) {
-      selectNextEvent(cal);
-    } else if (checkInput('p')) {
-      selectPrevEvent(cal);
-    } else if (checkInput(27, 91, 65, 0)) {
-      scroll--;
-    } else if (checkInput(27, 91, 66, 0)) {
-      scroll++;
     }
 
     render(cal);
