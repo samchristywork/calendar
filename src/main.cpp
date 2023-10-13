@@ -235,34 +235,31 @@ void eventLoop(Calendar &cal) {
     if (checkInput('q')) {
       break;
     } else if (checkInput('a')) {
-      generateEvent();
-      render(cal);
+      generateEvent(cal);
     } else if (checkInput('k')) {
-      if (toBeAdded != NULL) {
-        toBeAdded->offset(Duration(0, -15, 0));
-        render(cal);
+      if (selectedEvent != NULL) {
+        selectedEvent->offset(Duration(0, -15, 0));
       }
     } else if (checkInput('j')) {
-      if (toBeAdded != NULL) {
-        toBeAdded->offset(Duration(0, 15, 0));
-        render(cal);
+      if (selectedEvent != NULL) {
+        selectedEvent->offset(Duration(0, 15, 0));
       }
-    } else if (checkInput('m')) {
-      if (toBeAdded != NULL) {
-        cal.addEvent(toBeAdded);
-        toBeAdded = NULL;
+    } else if (checkInput(10)) {
+      if (selectedEvent != NULL) {
+        selectedEvent = NULL;
         save(cal);
-        render(cal);
       }
+    } else if (checkInput('n')) {
+      selectNextEvent(cal);
+    } else if (checkInput('p')) {
+      selectPrevEvent(cal);
     } else if (checkInput(27, 91, 65, 0)) {
       scroll--;
-      render(cal);
     } else if (checkInput(27, 91, 66, 0)) {
       scroll++;
-      render(cal);
-    } else {
-      render(cal);
     }
+
+    render(cal);
 
     readInput();
 
