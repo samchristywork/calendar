@@ -17,6 +17,7 @@ public:
   void writeToFile(string filename);
   vector<Event *> getEventsStartingBetween(DateTime start, DateTime end);
   vector<Event *> getEventsAtTime(DateTime t);
+  vector<Event *> getEventsAfter(DateTime t);
 
 private:
   vector<Event *> events;

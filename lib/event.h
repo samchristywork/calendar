@@ -22,6 +22,7 @@ public:
   bool isBefore(DateTime dt);
   bool isDuring(DateTime dt);
   Duration *getDuration() { return duration; }
+  DateTime *getTime() { return time; }
   string getName() { return name; }
   string toString();
 
