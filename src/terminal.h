@@ -32,8 +32,6 @@ inline void setCursorPosition(int x, int y) {
   cout << "\033[" << y << ";" << x << "H";
 }
 
-inline void invertColors() { cout << "\033[7m"; }
-
 inline void resetColors() { cout << "\033[0m"; }
 
 inline void makeCursorInvisible() { cout << "\033[?25l"; }
@@ -42,7 +40,13 @@ inline void makeCursorVisible() { cout << "\033[?25h"; }
 
 inline void yellow() { cout << "\033[33m"; }
 
-inline void green() { cout << "\033[32m"; }
+inline string green() { return "\033[32m"; }
+
+inline string grey() { return "\033[90m"; }
+
+inline string invertColors() { return "\033[7m"; }
+
+inline string white() { return "\033[97m"; }
 
 inline int getScreenHeight() {
   struct winsize w;

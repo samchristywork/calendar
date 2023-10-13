@@ -36,19 +36,22 @@ string fixedWidth(string s, size_t width) {
 }
 
 void renderLine(Calendar &cal, DateTime currentTime, int width) {
+  string line = "";
+  int lineOffset = 0;
+
   if (time(NULL) / 900 == currentTime.getEpoch() / 900) {
-    invertColors();
+    line += invertColors();
+    lineOffset += invertColors().length();
   }
 
   if (selectedEvent != NULL &&
       selectedEvent->isDuring(DateTime(currentTime.getEpoch()))) {
-    green();
+    line += green();
+    lineOffset += green().length();
   }
 
   int h = currentTime.getHour();
   int m = currentTime.getMinute();
-
-  string line = "";
 
   line += leftPad(to_string(h), 2, ' ');
   line += ":";
@@ -76,7 +79,7 @@ void renderLine(Calendar &cal, DateTime currentTime, int width) {
     line += events[0]->getName();
   }
 
-  line = fixedWidth(line, width);
+  line = fixedWidth(line, width + lineOffset);
   cout << line;
 
   resetColors();
