@@ -3,7 +3,7 @@
 #include <strings.h>
 #include <terminal.h>
 
-Event *selectedEvent = NULL;
+vector<Event *> selectedEvents = vector<Event *>();
 char lastInput[4] = {0, 0, 0, 0};
 int scroll = -2;
 string currentActivity = "";
@@ -45,10 +45,11 @@ void renderLine(Calendar &cal, DateTime currentTime, int width) {
     lineOffset += invertColors().length();
   }
 
-  if (selectedEvent != NULL &&
-      selectedEvent->isDuring(DateTime(currentTime.getEpoch()))) {
-    line += green();
-    lineOffset += green().length();
+  for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+    if (selectedEvents[i]->isDuring(DateTime(currentTime.getEpoch()))) {
+      line += green();
+      lineOffset += green().length();
+    }
   }
 
   int h = currentTime.getHour();
@@ -176,8 +177,9 @@ void generateEvent(Calendar &cal) {
   dt->setMinute(dt->getMinute() / 15 * 15);
 
   Duration *duration = new Duration(durationHoursInt, durationMinutesInt, 0);
-  selectedEvent = new Event(name, dt, duration);
-  cal.addEvent(selectedEvent);
+  Event *event = new Event(name, dt, duration);
+  selectedEvents.push_back(event);
+  cal.addEvent(event);
 
   alternateScreen();
   setRawTerminal();
@@ -202,10 +204,12 @@ bool checkInput(int c1, int c2, int c3, int c4) {
 void save(Calendar &cal) { cal.writeToFile(filename); }
 
 void selectNextEvent(Calendar &cal) {
-  int t = time(NULL);
+  int t = 0;
 
-  if (selectedEvent != NULL) {
-    t = selectedEvent->getTime()->getEpoch();
+  if (selectedEvents.size() != 0) {
+    t = selectedEvents[0]->getTime()->getEpoch();
+  } else {
+    t = time(NULL);
   }
 
   vector<Event *> events = cal.getEventsAfter(DateTime(t));
@@ -214,15 +218,18 @@ void selectNextEvent(Calendar &cal) {
       return a->getTime()->getEpoch() < b->getTime()->getEpoch();
     });
 
-    selectedEvent = events[0];
+    selectedEvents.clear();
+    selectedEvents.push_back(events[0]);
   }
 }
 
 void selectPrevEvent(Calendar &cal) {
-  int t = time(NULL);
+  int t = 0;
 
-  if (selectedEvent != NULL) {
-    t = selectedEvent->getTime()->getEpoch();
+  if (selectedEvents.size() != 0) {
+    t = selectedEvents[0]->getTime()->getEpoch();
+  } else {
+    t = time(NULL);
   }
 
   vector<Event *> events = cal.getEventsBefore(DateTime(t));
@@ -231,7 +238,8 @@ void selectPrevEvent(Calendar &cal) {
       return a->getTime()->getEpoch() > b->getTime()->getEpoch();
     });
 
-    selectedEvent = events[0];
+    selectedEvents.clear();
+    selectedEvents.push_back(events[0]);
   }
 }
 
@@ -241,18 +249,16 @@ bool handleEvent(Calendar &cal) {
   } else if (checkInput('a')) {
     generateEvent(cal);
   } else if (checkInput('k')) {
-    if (selectedEvent != NULL) {
-      selectedEvent->offset(Duration(0, -15, 0));
+    for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+      selectedEvents[i]->offset(Duration(0, -15, 0));
     }
   } else if (checkInput('j')) {
-    if (selectedEvent != NULL) {
-      selectedEvent->offset(Duration(0, 15, 0));
+    for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+      selectedEvents[i]->offset(Duration(0, 15, 0));
     }
   } else if (checkInput(10)) {
-    if (selectedEvent != NULL) {
-      selectedEvent = NULL;
-      save(cal);
-    }
+    selectedEvents.clear();
+    save(cal);
   } else if (checkInput('n')) {
     selectNextEvent(cal);
   } else if (checkInput('p')) {
