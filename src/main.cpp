@@ -260,6 +260,10 @@ bool handleEvent(Calendar &cal) {
     scroll--;
   } else if (checkInput(27, 91, 66, 0)) {
     scroll++;
+  } else if (checkInput(27, 91, 53, 126)) {
+    scroll -= getScreenHeight() / 2;
+  } else if (checkInput(27, 91, 54, 126)) {
+    scroll += getScreenHeight() / 2;
   }
 
   return true;
