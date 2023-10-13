@@ -1,8 +1,9 @@
+#include <algorithm>
 #include <cal.h>
 #include <strings.h>
 #include <terminal.h>
 
-Event *toBeAdded = NULL;
+Event *selectedEvent = NULL;
 char lastInput[4] = {0, 0, 0, 0};
 string statusline = "";
 int scroll = -2;
@@ -39,8 +40,8 @@ void renderLine(Calendar &cal, DateTime currentTime, int width) {
     invertColors();
   }
 
-  if (toBeAdded != NULL &&
-      toBeAdded->isDuring(DateTime(currentTime.getEpoch()))) {
+  if (selectedEvent != NULL &&
+      selectedEvent->isDuring(DateTime(currentTime.getEpoch()))) {
     green();
   }
 
@@ -146,7 +147,7 @@ void readInput() {
   }
 }
 
-void generateEvent() {
+void generateEvent(Calendar &cal) {
   resetTerminal();
   normalScreen();
 
@@ -169,8 +170,9 @@ void generateEvent() {
   DateTime *dt = new DateTime(s);
   dt->setSecond(0);
   dt->setMinute(dt->getMinute() / 15 * 15);
-  toBeAdded = new Event(name, dt,
-                        new Duration(durationHoursInt, durationMinutesInt, 0));
+  selectedEvent = new Event(
+      name, dt, new Duration(durationHoursInt, durationMinutesInt, 0));
+  cal.addEvent(selectedEvent);
 
   alternateScreen();
   setRawTerminal();
@@ -193,6 +195,40 @@ bool checkInput(int c1, int c2, int c3, int c4) {
 }
 
 void save(Calendar &cal) { cal.writeToFile("calendar.txt"); }
+
+void selectNextEvent(Calendar &cal) {
+  int t = time(NULL);
+
+  if (selectedEvent != NULL) {
+    t = selectedEvent->getTime()->getEpoch();
+  }
+
+  vector<Event *> events = cal.getEventsAfter(DateTime(t));
+  if (events.size() > 0) {
+    sort(events.begin(), events.end(), [](Event *a, Event *b) {
+      return a->getTime()->getEpoch() < b->getTime()->getEpoch();
+    });
+
+    selectedEvent = events[0];
+  }
+}
+
+void selectPrevEvent(Calendar &cal) {
+  int t = time(NULL);
+
+  if (selectedEvent != NULL) {
+    t = selectedEvent->getTime()->getEpoch();
+  }
+
+  vector<Event *> events = cal.getEventsBefore(DateTime(t));
+  if (events.size() > 0) {
+    sort(events.begin(), events.end(), [](Event *a, Event *b) {
+      return a->getTime()->getEpoch() > b->getTime()->getEpoch();
+    });
+
+    selectedEvent = events[0];
+  }
+}
 
 void eventLoop(Calendar &cal) {
   while (true) {

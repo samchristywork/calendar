@@ -81,3 +81,15 @@ vector<Event *> Calendar::getEventsAfter(DateTime t) {
 
   return e;
 }
+
+vector<Event *> Calendar::getEventsBefore(DateTime t) {
+  vector<Event *> e;
+
+  for (unsigned int i = 0; i < events.size(); i++) {
+    if (events[i]->isBefore(t)) {
+      e.push_back(events[i]);
+    }
+  }
+
+  return e;
+}
