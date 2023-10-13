@@ -8,6 +8,7 @@ char lastInput[4] = {0, 0, 0, 0};
 int scroll = -2;
 string currentActivity = "";
 string statusline = "";
+string filename = "calendar.txt";
 
 string leftPad(string s, size_t width, char c) {
   while (s.length() < width) {
@@ -198,7 +199,7 @@ bool checkInput(int c1, int c2, int c3, int c4) {
   return false;
 }
 
-void save(Calendar &cal) { cal.writeToFile("calendar.txt"); }
+void save(Calendar &cal) { cal.writeToFile(filename); }
 
 void selectNextEvent(Calendar &cal) {
   int t = time(NULL);
@@ -301,9 +302,13 @@ void eventLoop(Calendar &cal) {
   }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  if (argc == 2) {
+    filename = argv[1];
+  }
+
   Calendar cal;
-  cal.readFromFile("calendar.txt");
+  cal.readFromFile(filename);
 
   alternateScreen();
   clearScreen();
