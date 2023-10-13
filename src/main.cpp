@@ -265,6 +265,26 @@ bool handleEvent(Calendar &cal) {
   return true;
 }
 
+void updateStatusLine(Calendar &cal) {
+  statusline = "";
+  statusline += "(";
+  statusline += to_string(lastInput[0]);
+  statusline += ", ";
+  statusline += to_string(lastInput[1]);
+  statusline += ", ";
+  statusline += to_string(lastInput[2]);
+  statusline += ", ";
+  statusline += to_string(lastInput[3]);
+  statusline += ") ";
+
+  DateTime currentDatetime = DateTime(time(NULL));
+  vector<Event *> currentEvents = cal.getEventsAtTime(currentDatetime);
+  if (currentEvents.size() > 0) {
+    statusline += currentEvents[0]->getName();
+    statusline += " ";
+  }
+}
+
 void eventLoop(Calendar &cal) {
   while (true) {
     if (!handleEvent(cal)) {
@@ -272,25 +292,8 @@ void eventLoop(Calendar &cal) {
     }
 
     render(cal);
-
     readInput();
-
-    statusline = "";
-    statusline += "(";
-    statusline += to_string(lastInput[0]);
-    statusline += ", ";
-    statusline += to_string(lastInput[1]);
-    statusline += ", ";
-    statusline += to_string(lastInput[2]);
-    statusline += ", ";
-    statusline += to_string(lastInput[3]);
-    statusline += ") ";
-
-    vector<Event *> currentEvents = cal.getEventsAtTime(DateTime(time(NULL)));
-    if (currentEvents.size() > 0) {
-      statusline += currentEvents[0]->getName();
-      statusline += " ";
-    }
+    updateStatusLine(cal);
   }
 }
 
