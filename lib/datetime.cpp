@@ -79,36 +79,34 @@ string Time::toString() {
 
 DateTime::DateTime(string s) {
   vector<string> tokens = split(s, ' ');
-  date = new Date(tokens[0]);
-  time = new Time(tokens[1]);
+  date = Date(tokens[0]);
+  time = Time(tokens[1]);
 }
 
 DateTime::DateTime(time_t s) {
   struct tm *t = localtime(&s);
-  date = new Date(t->tm_year + 1900, t->tm_mon + 1, t->tm_mday);
-  time = new Time(t->tm_hour, t->tm_min, t->tm_sec);
+
+  date = Date(t->tm_year + 1900, t->tm_mon + 1, t->tm_mday);
+  time = Time(t->tm_hour, t->tm_min, t->tm_sec);
 }
 
 void DateTime::delay(Duration d) {
-  time->delay(d);
-  if (time->getHour() == 0 && time->getMinute() == 0 &&
-      time->getSecond() == 0) {
-    date->delay(0, 0, 1);
+  time.delay(d);
+  if (time.getHour() == 0 && time.getMinute() == 0 && time.getSecond() == 0) {
+    date.delay(0, 0, 1);
   }
 }
 
 int DateTime::getEpoch() {
   struct tm t;
-  t.tm_year = date->getYear() - 1900;
-  t.tm_mon = date->getMonth() - 1;
-  t.tm_mday = date->getDay();
-  t.tm_hour = time->getHour();
-  t.tm_min = time->getMinute();
-  t.tm_sec = time->getSecond();
+  t.tm_year = date.getYear() - 1900;
+  t.tm_mon = date.getMonth() - 1;
+  t.tm_mday = date.getDay();
+  t.tm_hour = time.getHour();
+  t.tm_min = time.getMinute();
+  t.tm_sec = time.getSecond();
   t.tm_isdst = -1;
   return mktime(&t);
 }
 
-string DateTime::toString() {
-  return date->toString() + " " + time->toString();
-}
+string DateTime::toString() { return date.toString() + " " + time.toString(); }
