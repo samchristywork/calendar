@@ -109,6 +109,32 @@ void render(Calendar &cal) {
   int height = getScreenHeight();
   int width = getScreenWidth();
 
+  int viewWindowOffset = scroll - 3 - 8;
+
+  // Scroll if selected event is out of view
+  if (selectedEvents.size() > 0) {
+    DateTime currentTime = DateTime(time(NULL));
+    currentTime.setMinute(0);
+    currentTime.setSecond(0);
+    int epoch = currentTime.getEpoch();
+
+    epoch += (viewWindowOffset + 5) * 15 * 60;
+    currentTime = DateTime(epoch);
+    if (selectedEvents[0]->isBefore(currentTime)) {
+      int diffSeconds =
+          currentTime.getEpoch() - selectedEvents[0]->getTime()->getEpoch();
+      scroll -= diffSeconds / (15 * 60);
+    }
+
+    epoch += (height - 7) * 15 * 60;
+    currentTime = DateTime(epoch);
+    if (selectedEvents[0]->isAfter(currentTime)) {
+      int diffSeconds =
+          selectedEvents[0]->getTime()->getEpoch() - currentTime.getEpoch();
+      scroll += diffSeconds / (15 * 60);
+    }
+  }
+
   clearLine(0, width);
   clearLine(1, width);
 
@@ -118,7 +144,7 @@ void render(Calendar &cal) {
   cout << statusline;
 
   for (int y = 3; y < height; y++) {
-    int offset = y - 3 - 8 + scroll;
+    int offset = y + viewWindowOffset;
 
     DateTime currentTime = DateTime(time(NULL));
     currentTime.setMinute(0);
