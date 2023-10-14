@@ -255,8 +255,38 @@ void listFiles(string dirname) {
     }
     closedir(dir);
   } else {
-    perror("");
+    perror("opendir");
   }
+}
+
+void getTemplate(Calendar &cal) {
+  resetTerminal();
+  normalScreen();
+
+  DateTime currentDatetime = DateTime(time(NULL));
+
+  listFiles("templates");
+
+  cout << "Template name: ";
+  string name;
+  getline(cin, name);
+
+  Calendar templateCal;
+  templateCal.readFromFile("templates/" + name);
+
+  vector<Event *> events = templateCal.getEvents();
+  for (unsigned int i = 0; i < events.size(); i++) {
+    Event *event = events[i];
+    DateTime *dt = event->getTime();
+    dt->setYear(currentDatetime.getYear());
+    dt->setMonth(currentDatetime.getMonth());
+    dt->setDay(currentDatetime.getDay());
+    cal.addEvent(event);
+  }
+
+  alternateScreen();
+  clearScreen();
+  setRawTerminal();
 }
 
 bool handleEvent(Calendar &cal) {
