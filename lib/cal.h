@@ -19,6 +19,7 @@ public:
   vector<Event *> getEventsAtTime(DateTime t);
   vector<Event *> getEventsAfter(DateTime t);
   vector<Event *> getEventsBefore(DateTime t);
+  vector<Event *> getEvents() { return events; }
 
 private:
   vector<Event *> events;

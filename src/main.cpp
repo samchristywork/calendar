@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cal.h>
+#include <dirent.h>
 #include <strings.h>
 #include <terminal.h>
 
@@ -240,6 +241,21 @@ void selectPrevEvent(Calendar &cal) {
 
     selectedEvents.clear();
     selectedEvents.push_back(events[0]);
+  }
+}
+
+void listFiles(string dirname) {
+  DIR *dir;
+  struct dirent *ent;
+  if ((dir = opendir(dirname.c_str())) != NULL) {
+    while ((ent = readdir(dir)) != NULL) {
+      if (ent->d_name[0] != '.') {
+        cout << ent->d_name << endl;
+      }
+    }
+    closedir(dir);
+  } else {
+    perror("");
   }
 }
 
