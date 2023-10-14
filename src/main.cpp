@@ -302,6 +302,8 @@ bool handleEvent(Calendar &cal) {
     for (unsigned int i = 0; i < selectedEvents.size(); i++) {
       selectedEvents[i]->offset(Duration(0, 15, 0));
     }
+  } else if (checkInput('t')) {
+    getTemplate(cal);
   } else if (checkInput(10)) {
     selectedEvents.clear();
     save(cal);
