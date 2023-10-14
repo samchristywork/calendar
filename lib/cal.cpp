@@ -32,6 +32,8 @@ string Calendar::serialize() {
 }
 
 void Calendar::readFromFile(string filename) {
+  events.clear();
+
   ifstream file(filename);
   string line;
   while (getline(file, line)) {
