@@ -140,8 +140,28 @@ void render(Calendar &cal) {
 
   makeCursorInvisible();
 
-  setCursorPosition(0, 0);
+  setCursorPosition(0, 1);
   cout << statusline;
+
+  {
+    setCursorPosition(0, 2);
+    DateTime currentTime = DateTime(time(NULL));
+    currentTime.setMinute(0);
+    currentTime.setSecond(0);
+    int epoch = currentTime.getEpoch();
+    epoch += viewWindowOffset * 15 * 60;
+    currentTime = DateTime(epoch);
+
+    int year = currentTime.getYear();
+    int month = currentTime.getMonth();
+    int day = currentTime.getDay();
+
+    cout << year;
+    cout << "-";
+    cout << leftPad(to_string(month), 2, '0');
+    cout << "-";
+    cout << leftPad(to_string(day), 2, '0');
+  }
 
   for (int y = 3; y < height; y++) {
     int offset = y + viewWindowOffset;
