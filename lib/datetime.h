@@ -22,6 +22,7 @@ public:
   int getSecond() { return second; }
   int getHour() { return hour; }
   int getEpoch();
+  void setEpoch(int e);
   string toString();
 
 private:

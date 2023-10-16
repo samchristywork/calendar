@@ -360,6 +360,22 @@ bool handleEvent(Calendar &cal) {
     scroll -= 24 * 4;
   } else if (checkInput('l')) {
     scroll += 24 * 4;
+  } else if (checkInput('-')) {
+    if (selectedEvents.size() > 0) {
+      for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+        Duration *d = selectedEvents[i]->getDuration();
+        if (d->getEpoch() > 15 * 60) {
+          d->setEpoch(d->getEpoch() - 15 * 60);
+        }
+      }
+    }
+  } else if (checkInput('+') || checkInput('=')) {
+    if (selectedEvents.size() > 0) {
+      for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+        Duration *d = selectedEvents[i]->getDuration();
+        d->setEpoch(d->getEpoch() + 15 * 60);
+      }
+    }
   } else if (checkInput('t')) {
     getTemplate(cal);
   } else if (checkInput(10)) {

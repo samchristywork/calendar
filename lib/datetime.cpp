@@ -11,6 +11,12 @@ Duration::Duration(string s) {
 
 int Duration::getEpoch() { return hour * 60 * 60 + minute * 60 + second; }
 
+void Duration::setEpoch(int e) {
+  hour = e / 60 / 60;
+  minute = (e / 60) % 60;
+  second = e % 60;
+}
+
 string Duration::toString() {
   return to_string(hour) + ":" + formatFixedWidth(to_string(minute), 2, '0') +
          ":" + formatFixedWidth(to_string(second), 2, '0');
