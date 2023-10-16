@@ -432,6 +432,7 @@ int main(int argc, char *argv[]) {
   eventLoop(cal);
   resetTerminal();
   normalScreen();
+  fflush(stdout);
 
   save(cal);
 
