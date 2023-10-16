@@ -365,6 +365,8 @@ bool handleEvent(Calendar &cal) {
   } else if (checkInput(10)) {
     selectedEvents.clear();
     save(cal);
+  } else if (checkInput('0')) {
+    scroll = -2;
   } else if (checkInput('n')) {
     selectNextEvent(cal);
   } else if (checkInput('p')) {
