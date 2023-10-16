@@ -424,6 +424,8 @@ int main(int argc, char *argv[]) {
   Calendar cal;
   cal.readFromFile(filename);
 
+  cal.writeToFile("/tmp/calendardiff");
+
   alternateScreen();
   clearScreen();
   setRawTerminal();
@@ -432,4 +434,8 @@ int main(int argc, char *argv[]) {
   normalScreen();
 
   save(cal);
+
+  string command = "diff --color=always -u0 " + filename + " /tmp/calendardiff";
+  system(command.c_str());
+  fflush(stdout);
 }
