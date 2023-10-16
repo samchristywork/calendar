@@ -341,13 +341,25 @@ bool handleEvent(Calendar &cal) {
   } else if (checkInput('a')) {
     generateEvent(cal);
   } else if (checkInput('k')) {
-    for (unsigned int i = 0; i < selectedEvents.size(); i++) {
-      selectedEvents[i]->offset(Duration(0, -15, 0));
+    if (selectedEvents.size() > 0) {
+      for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+        selectedEvents[i]->offset(Duration(0, -15, 0));
+      }
+    } else {
+      scroll--;
     }
   } else if (checkInput('j')) {
-    for (unsigned int i = 0; i < selectedEvents.size(); i++) {
-      selectedEvents[i]->offset(Duration(0, 15, 0));
+    if (selectedEvents.size() > 0) {
+      for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+        selectedEvents[i]->offset(Duration(0, 15, 0));
+      }
+    } else {
+      scroll++;
     }
+  } else if (checkInput('h')) {
+    scroll -= 24 * 4;
+  } else if (checkInput('l')) {
+    scroll += 24 * 4;
   } else if (checkInput('t')) {
     getTemplate(cal);
   } else if (checkInput(10)) {
