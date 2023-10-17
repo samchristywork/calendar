@@ -452,7 +452,7 @@ int main(int argc, char *argv[]) {
 
   save(cal);
 
-  string command = "diff --color=always -u0 " + filename + " /tmp/calendardiff";
+  string command = "diff --color=always -u0 /tmp/calendardiff " + filename;
   system(command.c_str());
   fflush(stdout);
 }
