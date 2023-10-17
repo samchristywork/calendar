@@ -420,9 +420,9 @@ void eventLoop(Calendar &cal) {
       break;
     }
 
+    updateStatusLine(cal);
     render(cal);
     readInput();
-    updateStatusLine(cal);
   }
 }
 
