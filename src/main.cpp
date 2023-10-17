@@ -141,8 +141,10 @@ void render(Calendar &cal) {
 
   makeCursorInvisible();
 
+  cout << invertColors();
   setCursorPosition(0, 1);
-  cout << statusline;
+  cout << fixedWidth(statusline, width);
+  resetColors();
 
   for (int y = 3; y < height; y++) {
     int offset = y + viewWindowOffset;
