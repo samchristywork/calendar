@@ -10,6 +10,7 @@ int scroll = -2;
 string currentActivity = "";
 string statusline = "";
 string filename = "calendar.txt";
+int viewWindowOffset = 0;
 
 string leftPad(string s, size_t width, char c) {
   while (s.length() < width) {
@@ -109,7 +110,7 @@ void render(Calendar &cal) {
   int height = getScreenHeight();
   int width = getScreenWidth();
 
-  int viewWindowOffset = scroll - 3 - 8;
+  viewWindowOffset = scroll - 3 - 8;
 
   // Scroll if selected event is out of view
   if (selectedEvents.size() > 0) {
@@ -142,26 +143,6 @@ void render(Calendar &cal) {
 
   setCursorPosition(0, 1);
   cout << statusline;
-
-  {
-    setCursorPosition(0, 2);
-    DateTime currentTime = DateTime(time(NULL));
-    currentTime.setMinute(0);
-    currentTime.setSecond(0);
-    int epoch = currentTime.getEpoch();
-    epoch += viewWindowOffset * 15 * 60;
-    currentTime = DateTime(epoch);
-
-    int year = currentTime.getYear();
-    int month = currentTime.getMonth();
-    int day = currentTime.getDay();
-
-    cout << year;
-    cout << "-";
-    cout << leftPad(to_string(month), 2, '0');
-    cout << "-";
-    cout << leftPad(to_string(day), 2, '0');
-  }
 
   for (int y = 3; y < height; y++) {
     int offset = y + viewWindowOffset;
@@ -402,15 +383,26 @@ bool handleEvent(Calendar &cal) {
 
 void updateStatusLine(Calendar &cal) {
   statusline = "";
-  statusline += "(";
-  statusline += to_string(lastInput[0]);
-  statusline += ", ";
-  statusline += to_string(lastInput[1]);
-  statusline += ", ";
-  statusline += to_string(lastInput[2]);
-  statusline += ", ";
-  statusline += to_string(lastInput[3]);
-  statusline += ") ";
+
+  DateTime currentTime = DateTime(time(NULL));
+  currentTime.setMinute(0);
+  currentTime.setSecond(0);
+  int epoch = currentTime.getEpoch();
+  epoch += viewWindowOffset * 15 * 60;
+  currentTime = DateTime(epoch);
+
+  int year = currentTime.getYear();
+  int month = currentTime.getMonth();
+  int day = currentTime.getDay();
+
+  statusline += " ";
+  statusline += to_string(year);
+  statusline += "-";
+  statusline += leftPad(to_string(month), 2, '0');
+  statusline += "-";
+  statusline += leftPad(to_string(day), 2, '0');
+
+  statusline += " | ";
 
   DateTime currentDatetime = DateTime(time(NULL));
   vector<Event *> currentEvents = cal.getEventsAtTime(currentDatetime);
