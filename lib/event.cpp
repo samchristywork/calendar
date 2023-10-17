@@ -4,9 +4,9 @@
 
 Event::Event(string s) {
   vector<string> tokens = split(s, '\t');
-  name = tokens[0];
-  time = new DateTime(tokens[1]);
-  duration = new Duration(tokens[2]);
+  time = new DateTime(tokens[0]);
+  duration = new Duration(tokens[1]);
+  name = tokens[2];
 }
 
 void Event::delay(Duration d) {
@@ -106,5 +106,5 @@ bool Event::isDuring(DateTime dt) {
 }
 
 string Event::toString() {
-  return name + "\t" + time->toString() + "\t" + duration->toString();
+  return time->toString() + "\t" + duration->toString() + "\t" + name;
 }
