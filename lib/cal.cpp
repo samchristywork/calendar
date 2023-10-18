@@ -35,6 +35,11 @@ void Calendar::readFromFile(string filename) {
   events.clear();
 
   ifstream file(filename);
+  if (!file.is_open()) {
+    cout << "Could not open file " << filename << endl;
+    return;
+  }
+
   string line;
   while (getline(file, line)) {
     addEvent(new Event(line));
