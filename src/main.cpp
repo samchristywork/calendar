@@ -318,6 +318,26 @@ void getTemplate(Calendar &cal) {
   setRawTerminal();
 }
 
+void goToDate() {
+  resetTerminal();
+  normalScreen();
+
+  cout << "DateTime (Ex. 2023-10-17 20:25:17):" << endl;
+  string d;
+  getline(cin, d);
+
+  DateTime currentDatetime = DateTime(time(NULL));
+  DateTime newDateTime = DateTime(d);
+
+  int diff = newDateTime.getEpoch() - currentDatetime.getEpoch();
+
+  scroll = diff / 900;
+
+  alternateScreen();
+  clearScreen();
+  setRawTerminal();
+}
+
 bool handleEvent(Calendar &cal) {
   if (checkInput('q')) {
     return false;
@@ -366,6 +386,8 @@ bool handleEvent(Calendar &cal) {
     save(cal);
   } else if (checkInput('0')) {
     scroll = -2;
+  } else if (checkInput('g')) {
+    goToDate();
   } else if (checkInput('n')) {
     selectNextEvent(cal);
   } else if (checkInput('p')) {
