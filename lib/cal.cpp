@@ -51,6 +51,15 @@ void Calendar::writeToFile(string filename) {
   file << serialize();
 }
 
+void Calendar::cleanEvents() {
+  for (unsigned int i = 0; i < events.size(); i++) {
+    if (events[i]->isMarkedForDeletion()) {
+      events.erase(events.begin() + i);
+      i--;
+    }
+  }
+}
+
 vector<Event *> Calendar::getEventsStartingBetween(DateTime start,
                                                    DateTime end) {
   vector<Event *> eventsBetween;

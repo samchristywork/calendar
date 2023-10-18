@@ -21,6 +21,8 @@ public:
   bool isAfter(DateTime dt);
   bool isBefore(DateTime dt);
   bool isDuring(DateTime dt);
+  void markForDeletion() { markedForDeletion = true; }
+  bool isMarkedForDeletion() { return markedForDeletion; }
   Duration *getDuration() { return duration; }
   DateTime *getTime() { return time; }
   string getName() { return name; }
@@ -30,6 +32,7 @@ private:
   string name;
   DateTime *time;
   Duration *duration;
+  bool markedForDeletion = false;
 };
 
 #endif
