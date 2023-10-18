@@ -14,9 +14,16 @@ build/%.o: src/%.cpp
 build/main: build/main.o build/event.o build/util.o build/datetime.o build/cal.o
 	${CC} build/*.o ${LIBS} -o $@
 
+build/test: build/test.o build/event.o build/util.o build/datetime.o build/cal.o
+	${CC} build/*.o ${LIBS} -o $@
+
 .PHONY: run
 run: build/main
 	./build/main
+
+.PHONY: test
+test: build/test
+	./build/test
 
 .PHONY: clean
 clean:
