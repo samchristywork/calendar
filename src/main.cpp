@@ -386,6 +386,14 @@ bool handleEvent(Calendar &cal) {
     save(cal);
   } else if (checkInput('0')) {
     scroll = -2;
+  } else if (checkInput('d')) {
+    if (selectedEvents.size() > 0) {
+      for (unsigned int i = 0; i < selectedEvents.size(); i++) {
+        selectedEvents[i]->markForDeletion();
+      }
+    }
+
+    cal.cleanEvents();
   } else if (checkInput('g')) {
     goToDate();
   } else if (checkInput('n')) {
