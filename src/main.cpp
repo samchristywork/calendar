@@ -1,8 +1,11 @@
 #include <algorithm>
 #include <cal.h>
 #include <dirent.h>
+#include <fcntl.h>
+#include <iostream>
 #include <strings.h>
 #include <terminal.h>
+#include <unistd.h>
 
 vector<Event *> selectedEvents = vector<Event *>();
 char lastInput[4] = {0, 0, 0, 0};
@@ -461,6 +464,20 @@ int main(int argc, char *argv[]) {
     filename = argv[1];
   }
 
+  const char *lockfilename = "/tmp/calendar.lock";
+  int lockfile = open(lockfilename, O_CREAT | O_RDWR, 0666);
+
+  if (lockfile == -1) {
+    cerr << "Failed to open or create lock file." << endl;
+    return EXIT_FAILURE;
+  }
+
+  if (lockf(lockfile, F_TLOCK, 0) == -1) {
+    cerr << "Application is already running!" << endl;
+    close(lockfile);
+    return EXIT_FAILURE;
+  }
+
   Calendar cal;
   cal.readFromFile(filename);
 
@@ -479,4 +496,7 @@ int main(int argc, char *argv[]) {
   string command = "diff --color=always -u0 /tmp/calendardiff " + filename;
   system(command.c_str());
   fflush(stdout);
+
+  close(lockfile);
+  unlink(lockfilename);
 }
