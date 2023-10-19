@@ -14,5 +14,22 @@ int main() {
   assert(events.size() == 3);
   assert(events[1]->getName() == "Bar");
 
+  Event *a = new Event("Foo", new DateTime(2023, 10, 18, 15, 0, 0),
+                       new Duration(0, 15, 0));
+  Event *b = new Event("2023-12-18 15:30:00	0:30:00	Bar");
+
+  cal.addEvent(a);
+  cal.addEvent(b);
+
+  Event *c = cal.findEvent("2023-12-18 15:30:00	0:30:00	Bar");
+  assert(c->getName() == "Bar");
+
+  cout << cal.serialize() << endl;
+
+  c->markForDeletion();
+  cal.cleanEvents();
+
+  cout << cal.serialize() << endl;
+
   cal.writeToFile("/tmp/calendardiff");
 }
