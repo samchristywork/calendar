@@ -31,5 +31,10 @@ int main() {
 
   cout << cal.serialize() << endl;
 
+  assert(cal.getEvents().size() == 4);
+  assert(cal.getEventsStartingBetween(DateTime(2023, 10, 18, 15, 0, 0),
+                                      DateTime(2023, 12, 18, 15, 0, 0))
+             .size() == 1);
+
   cal.writeToFile("/tmp/calendardiff");
 }
