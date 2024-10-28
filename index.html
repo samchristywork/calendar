@@ -53,5 +53,38 @@
   <div>Saturday</div>
 </div>
 <div id="calendar" class="calendar"></div>
+<script>
+  const calendar = document.getElementById('calendar');
+  let nWeeks = 8;
+  const events = {
+    "2025-05-27": ["Doctor's Appointment", "Grocery Shopping"],
+    "2025-05-29": ["Meeting with Team", "Gym"],
+    "2025-05-01": ["Project Deadline"],
+    "2025-05-03": ["Weekend Getaway"],
+    "2025-05-05": ["Dentist Appointment"]
+  };
+
+  function hash(month) {
+    return (month * 123123123) % 360;
+  }
+
+  function generateCalendar(startDate) {
+  }
+
+  function createDayElement(dateText, hue) {
+  }
+
+  function createWeekElement() {
+  }
+
+  let currentDate = new Date();
+  generateCalendar(currentDate);
+
+  calendar.addEventListener('wheel', (event) => {
+  });
+
+  document.addEventListener('keydown', (event) => {
+  });
+</script>
 </body>
 </html>
