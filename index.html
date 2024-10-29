@@ -72,9 +72,28 @@
   }
 
   function createDayElement(dateText, hue) {
+    const dayElement = document.createElement('div');
+    dayElement.classList.add('day');
+    dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 80%)';
+    dayElement.textContent = dateText;
+
+    if (events[dateText]) {
+      events[dateText].forEach(event => {
+        const eventElement = document.createElement('div');
+        eventElement.classList.add('event');
+        eventElement.textContent = event;
+        dayElement.appendChild(eventElement);
+      });
+    }
+
+    return dayElement;
   }
 
   function createWeekElement() {
+    const weekElement = document.createElement('div');
+    weekElement.classList.add('row');
+    weekElement.style.height = 'calc((100vh - 2rem) / ' + nWeeks + ')';
+    return weekElement;
   }
 
   let currentDate = new Date();
