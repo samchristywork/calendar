@@ -126,9 +126,39 @@
   generateCalendar(currentDate);
 
   calendar.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    if (event.deltaY < 0) {
+      currentDate.setDate(currentDate.getDate() - 7);
+      generateCalendar(currentDate);
+    } else {
+      currentDate.setDate(currentDate.getDate() + 7);
+      generateCalendar(currentDate);
+    }
   });
 
   document.addEventListener('keydown', (event) => {
+    console.log(event.key);
+    if (event.key === 'ArrowUp') {
+      currentDate.setDate(currentDate.getDate() - 7);
+      generateCalendar(currentDate);
+    } else if (event.key === 'ArrowDown') {
+      currentDate.setDate(currentDate.getDate() + 7);
+      generateCalendar(currentDate);
+    } else if (event.key === 'w') {
+      nWeeks = 1;
+      generateCalendar(currentDate);
+    } else if (event.key === 'm') {
+      nWeeks = 4;
+      generateCalendar(currentDate);
+    } else if (event.key === '=') {
+      nWeeks++;
+      generateCalendar(currentDate);
+    } else if (event.key === '-') {
+      if (nWeeks > 1) {
+        nWeeks--;
+        generateCalendar(currentDate);
+      }
+    }
   });
 </script>
 </body>
