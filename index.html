@@ -69,6 +69,32 @@
   }
 
   function generateCalendar(startDate) {
+    const d = new Date(startDate);
+    const dayOfWeek = d.getDay();
+    console.log(dayOfWeek);
+    let lastSunday = new Date(d);
+    lastSunday.setDate(d.getDate() - dayOfWeek);
+    const firstDay = new Date(lastSunday);
+    let currentDay = new Date(firstDay);
+    calendar.innerHTML = '';
+
+    let weekCounter = 1;
+    let weekElement = createWeekElement();
+    while (weekCounter <= nWeeks) {
+      const dateText = "" +
+        (currentDay.getYear() + 1900) + "-" +
+        (currentDay.getMonth() + 1).toString().padStart(2, '0') + "-" +
+        currentDay.getDate().toString().padStart(2, '0');
+      const dayElement = createDayElement(dateText, hash(currentDay.getMonth()));
+      currentDay.setDate(currentDay.getDate() + 1);
+      weekElement.appendChild(dayElement);
+
+      if (weekElement.children.length === 7) {
+        calendar.appendChild(weekElement);
+        weekElement = createWeekElement();
+        weekCounter++;
+      }
+    }
   }
 
   function createDayElement(dateText, hue) {
