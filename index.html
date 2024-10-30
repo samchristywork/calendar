@@ -58,7 +58,7 @@
   let nWeeks = 8;
   const events = {
     "2025-05-27": ["Doctor's Appointment", "Grocery Shopping"],
-    "2025-05-29": ["Meeting with Team", "Gym"],
+    "2025-05-29": ["Meeting with Team", "Gym", "Something else, I'm sure"],
     "2025-05-01": ["Project Deadline"],
     "2025-05-03": ["Weekend Getaway"],
     "2025-05-05": ["Dentist Appointment"]
@@ -68,19 +68,12 @@
     return (month * 123123123) % 360;
   }
 
-  let currentDate = new Date();
-  function generateCalendar() {
-    const d = new Date(currentDate);
-    const dayOfWeek = d.getDay();
-    let lastSunday = new Date(d);
-    lastSunday.setDate(d.getDate() - dayOfWeek);
-    const firstDay = new Date(lastSunday);
-    let currentDay = new Date(firstDay);
-    calendar.innerHTML = '';
+  function generateWeek(currentDay) {
+    const weekElement = document.createElement('div');
+    weekElement.classList.add('row');
+    weekElement.style.height = 'calc((100vh - 2rem) / ' + nWeeks + ')';
 
-    let weekCounter = 1;
-    let weekElement = createWeekElement();
-    while (weekCounter <= nWeeks) {
+    for (let i = 0; i < 7; i++) {
       const dateText = "" +
         (currentDay.getYear() + 1900) + "-" +
         (currentDay.getMonth() + 1).toString().padStart(2, '0') + "-" +
@@ -88,12 +81,20 @@
       const dayElement = createDayElement(dateText, hash(currentDay.getMonth()));
       currentDay.setDate(currentDay.getDate() + 1);
       weekElement.appendChild(dayElement);
+    }
 
-      if (weekElement.children.length === 7) {
-        calendar.appendChild(weekElement);
-        weekElement = createWeekElement();
-        weekCounter++;
-      }
+    return weekElement;
+  }
+
+  let currentDate = new Date();
+  function generateCalendar() {
+    let lastSunday = new Date(currentDate);
+    lastSunday.setDate(currentDate.getDate() - currentDate.getDay());
+    let currentDay = new Date(lastSunday);
+    calendar.innerHTML = '';
+
+    for (let i = 0; i < nWeeks; i++) {
+      calendar.appendChild(generateWeek(currentDay));
     }
   }
 
@@ -101,7 +102,12 @@
     const dayElement = document.createElement('div');
     dayElement.classList.add('day');
     dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 80%)';
-    dayElement.textContent = dateText;
+    const dateTextElement = document.createElement('div');
+    dateTextElement.textContent = dateText;
+    dateTextElement.style.textAlign = 'center';
+    dateTextElement.style.fontWeight = 'bold';
+    dateTextElement.style.fontSize = '0.75em';
+    dayElement.appendChild(dateTextElement);
 
     dayElement.addEventListener('click', () => {
       const response = prompt("Add an event for " + dateText + ":");
@@ -124,13 +130,6 @@
     }
 
     return dayElement;
-  }
-
-  function createWeekElement() {
-    const weekElement = document.createElement('div');
-    weekElement.classList.add('row');
-    weekElement.style.height = 'calc((100vh - 2rem) / ' + nWeeks + ')';
-    return weekElement;
   }
 
   generateCalendar();
