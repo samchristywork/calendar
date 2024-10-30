@@ -56,13 +56,16 @@
 <script>
   const calendar = document.getElementById('calendar');
   let nWeeks = 8;
-  const events = {
-    "2025-05-27": ["Doctor's Appointment", "Grocery Shopping"],
-    "2025-05-29": ["Meeting with Team", "Gym", "Something else, I'm sure"],
-    "2025-05-01": ["Project Deadline"],
-    "2025-05-03": ["Weekend Getaway"],
-    "2025-05-05": ["Dentist Appointment"]
-  };
+  let events = {};
+  events = fetch('events.json')
+    .then(response => response.json())
+    .then(data => {
+      events = data;
+      generateCalendar();
+    })
+    .catch(error => {
+      console.error('Error loading events:', error);
+    });
 
   function hash(month) {
     return (month * 123123123) % 360;
