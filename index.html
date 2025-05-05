@@ -66,6 +66,18 @@
   .slide-transition {
     transition: transform 0.3s ease-in-out;
   }
+
+  .instructions-close {
+    position: absolute;
+    top: 0rem;
+    right: 0.5rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
   </style>
 </head>
 <body>
@@ -80,6 +92,7 @@
 </div>
 <div id="calendar" class="calendar"></div>
 <div class="instructions" onclick="toggleInstructions()">
+  <span class="instructions-close">×</span>
   <h1>Instructions:</h1>
   <div><strong>Up Arrow</strong>: Move up one week</div>
   <div><strong>Down Arrow</strong>: Move down one week</div>
