@@ -99,8 +99,8 @@
   <div><strong>w</strong>: Show one week</div>
   <div><strong>m</strong>: Show four weeks</div>
   <div><strong>=</strong>: Increase number of weeks displayed</div>
-  <div><strong>-</strong>: Decrease number of weeks displayed (minimum 1)</div>
-  <p>Click on a date to add an event.</p>
+  <div><strong>-</strong>: Decrease number of weeks displayed</div>
+  <p>Click on a date to add an event</p>
 </div>
 <script>
   function toggleInstructions() {
@@ -184,6 +184,21 @@
         }
         events[dateText].push(response);
         generateCalendar();
+
+        fetch('save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(events)
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Events saved successfully:', data);
+        })
+        .catch(error => {
+          console.error('Error saving events:', error);
+        });
       }
     });
 
