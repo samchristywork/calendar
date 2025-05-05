@@ -42,6 +42,7 @@
   }
 
   .instructions {
+    transform: translateX(0%);
     position: fixed;
     bottom: 1rem;
     right: 1rem;
@@ -50,6 +51,20 @@
     border-radius: 5px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease-in-out;
+  }
+
+  .instructions:hover {
+    background-color: rgba(230, 230, 230, 0.9);
+    cursor: pointer;
+  }
+
+  .instructions-hidden {
+    transform: translateX(100%);
+  }
+
+  .slide-transition {
+    transition: transform 0.3s ease-in-out;
   }
   </style>
 </head>
@@ -64,7 +79,7 @@
   <div>Saturday</div>
 </div>
 <div id="calendar" class="calendar"></div>
-<div class="instructions">
+<div class="instructions" onclick="toggleInstructions()">
   <h1>Instructions:</h1>
   <div><strong>Up Arrow</strong>: Move up one week</div>
   <div><strong>Down Arrow</strong>: Move down one week</div>
@@ -75,6 +90,11 @@
   <p>Click on a date to add an event.</p>
 </div>
 <script>
+  function toggleInstructions() {
+    const instructions = document.querySelector('.instructions');
+    instructions.classList.toggle('instructions-hidden');
+  }
+
   const calendar = document.getElementById('calendar');
   let nWeeks = 8;
   let events = {};
