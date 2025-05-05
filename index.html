@@ -103,7 +103,7 @@
         (currentDay.getMonth() + 1).toString().padStart(2, '0') + "-" +
         currentDay.getDate().toString().padStart(2, '0');
       const isToday = (currentDay.toDateString() === new Date().toDateString());
-      const dayElement = createDayElement(dateText, hash(currentDay.getMonth()), isToday);
+      const dayElement = createDayElement(dateText, hash(currentDay.getMonth()), isToday, i);
       currentDay.setDate(currentDay.getDate() + 1);
       weekElement.appendChild(dayElement);
     }
@@ -123,13 +123,19 @@
     }
   }
 
-  function createDayElement(dateText, hue, isToday) {
+  function createDayElement(dateText, hue, isToday, dayOfWeek) {
     const dayElement = document.createElement('div');
     dayElement.classList.add('day');
-    dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 80%)';
+    dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 85%)';
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      dayElement.style.backgroundColor = 'hsla(' + hue + ', 90%, 75%)';
+    }
+
     if (isToday) {
       dayElement.style.border = '2px solid rgba(0, 0, 0, 0.5)';
     }
+
     const dateTextElement = document.createElement('div');
     dateTextElement.textContent = dateText;
     dateTextElement.style.textAlign = 'center';
