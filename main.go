@@ -8,7 +8,30 @@ import (
 )
 
 func eventsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
+	if r.Method == http.MethodPost {
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Could not read request body", http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		data := string(body)
+
+		file, err := os.Create("data/events.json")
+		if err != nil {
+			http.Error(w, "Could not create file", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+		_, err = file.WriteString(data)
+		if err != nil {
+			http.Error(w, "Could not write to file", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Data saved successfully"))
+	} else if r.Method == http.MethodGet {
 		file, err := os.Open("data/events.json")
 		if err != nil {
 			http.Error(w, "Could not open file", http.StatusInternalServerError)
