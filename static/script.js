@@ -54,10 +54,10 @@ function generateCalendar() {
 function createDayElement(dateText, hue, isToday, dayOfWeek) {
   const dayElement = document.createElement('div');
   dayElement.classList.add('day');
-  dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 85%)';
+  dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 90%)';
 
   if (dayOfWeek === 0 || dayOfWeek === 6) {
-    dayElement.style.backgroundColor = 'hsla(' + hue + ', 90%, 75%)';
+    dayElement.style.backgroundColor = 'hsla(' + hue + ', 90%, 85%)';
   }
 
   if (isToday) {
