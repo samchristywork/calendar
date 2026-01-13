@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -15,6 +16,11 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		defer r.Body.Close()
+
+		if !json.Valid(body) {
+			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			return
+		}
 
 		data := string(body)
 
