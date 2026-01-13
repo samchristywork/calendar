@@ -14,6 +14,7 @@ events = fetch('events.json')
   })
   .catch(error => {
     console.error('Error loading events:', error);
+    generateCalendar();
   });
 
 function hash(month) {
@@ -108,8 +109,6 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
 
   return dayElement;
 }
-
-generateCalendar();
 
 document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowUp') {
