@@ -3,14 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 )
 
 func eventsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		body, err := ioutil.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Could not read request body", http.StatusBadRequest)
 			return
@@ -39,7 +39,7 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	} else if r.Method == http.MethodGet {
-		data, err := ioutil.ReadFile("data/events.json")
+		data, err := os.ReadFile("data/events.json")
 		if err != nil {
 			if os.IsNotExist(err) {
 				w.Header().Set("Content-Type", "application/json")
