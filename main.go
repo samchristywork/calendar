@@ -52,6 +52,10 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	if err := os.MkdirAll("data", 0755); err != nil {
+		fmt.Fprintf(os.Stderr, "Could not create data directory: %v\n", err)
+		os.Exit(1)
+	}
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.Handle("/events.json", http.HandlerFunc(eventsHandler))
 	fmt.Println("Serving on http://localhost:8080")
