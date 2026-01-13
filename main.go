@@ -33,19 +33,17 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	} else if r.Method == http.MethodGet {
-		file, err := os.Open("data/events.json")
+		data, err := ioutil.ReadFile("data/events.json")
 		if err != nil {
-			http.Error(w, "Could not open file", http.StatusInternalServerError)
-			return
-		}
-		defer file.Close()
-		data, err := ioutil.ReadAll(file)
-		if err != nil {
+			if os.IsNotExist(err) {
+				w.Header().Set("Content-Type", "application/json")
+				w.Write([]byte("{}"))
+				return
+			}
 			http.Error(w, "Could not read file", http.StatusInternalServerError)
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
 		w.Write(data)
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
