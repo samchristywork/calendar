@@ -80,7 +80,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
       events[dateText].push(response);
       generateCalendar();
 
-      fetch('save', {
+      fetch('events.json', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
