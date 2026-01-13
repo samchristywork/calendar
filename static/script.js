@@ -27,7 +27,7 @@ function generateWeek(currentDay) {
 
   for (let i = 0; i < 7; i++) {
     const dateText = "" +
-      (currentDay.getYear() + 1900) + "-" +
+      currentDay.getFullYear() + "-" +
       (currentDay.getMonth() + 1).toString().padStart(2, '0') + "-" +
       currentDay.getDate().toString().padStart(2, '0');
     const isToday = (currentDay.toDateString() === new Date().toDateString());
