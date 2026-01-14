@@ -65,5 +65,8 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.Handle("/events.json", http.HandlerFunc(eventsHandler))
 	fmt.Println("Serving on http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
+		os.Exit(1)
+	}
 }
