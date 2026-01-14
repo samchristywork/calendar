@@ -99,6 +99,19 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
 
       const label = document.createElement('span');
       label.textContent = event;
+      label.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const updated = prompt("Edit event:", event);
+        if (updated === null) return;
+        if (updated.trim() === '') {
+          events[dateText].splice(index, 1);
+          if (events[dateText].length === 0) delete events[dateText];
+        } else {
+          events[dateText][index] = updated.trim();
+        }
+        saveEvents();
+        generateCalendar();
+      });
 
       const deleteBtn = document.createElement('span');
       deleteBtn.classList.add('event-delete');
