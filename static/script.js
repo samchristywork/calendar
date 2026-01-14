@@ -52,6 +52,14 @@ function generateCalendar() {
   }
 }
 
+function saveEvents() {
+  fetch('events.json', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(events)
+  }).catch(error => console.error('Error saving events:', error));
+}
+
 function createDayElement(dateText, hue, isToday, dayOfWeek) {
   const dayElement = document.createElement('div');
   dayElement.classList.add('day');
@@ -79,30 +87,34 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
         events[dateText] = [];
       }
       events[dateText].push(response);
+      saveEvents();
       generateCalendar();
-
-      fetch('events.json', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(events)
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Events saved successfully:', data);
-      })
-      .catch(error => {
-        console.error('Error saving events:', error);
-      });
     }
   });
 
   if (events[dateText]) {
-    events[dateText].forEach(event => {
+    events[dateText].forEach((event, index) => {
       const eventElement = document.createElement('div');
       eventElement.classList.add('event');
-      eventElement.textContent = event;
+
+      const label = document.createElement('span');
+      label.textContent = event;
+
+      const deleteBtn = document.createElement('span');
+      deleteBtn.classList.add('event-delete');
+      deleteBtn.textContent = '×';
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        events[dateText].splice(index, 1);
+        if (events[dateText].length === 0) {
+          delete events[dateText];
+        }
+        saveEvents();
+        generateCalendar();
+      });
+
+      eventElement.appendChild(label);
+      eventElement.appendChild(deleteBtn);
       dayElement.appendChild(eventElement);
     });
   }
