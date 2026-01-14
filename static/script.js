@@ -174,5 +174,7 @@ document.addEventListener('keydown', (event) => {
   } else if (event.key === 't') {
     currentDate = new Date();
     generateCalendar();
+  } else if (event.key === '?') {
+    toggleInstructions();
   }
 });
