@@ -10,6 +10,10 @@
   overflow: auto;
 }
 
+.calendar {
+  margin-left: 2rem;
+}
+
 .row {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -46,6 +50,28 @@
   opacity: 1;
 }
 
+.side-label {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 2rem;
+  height: 100vh;
+  background-color: #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  z-index: 10;
+}
+
+.side-label span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-weight: bold;
+  font-size: 0.85em;
+}
+
 .header {
   font-size: 1em;
   display: grid;
@@ -55,6 +81,7 @@
   text-align: center;
   height: 2rem;
   line-height: 2rem;
+  margin-left: 2rem;
 }
 
 .instructions {

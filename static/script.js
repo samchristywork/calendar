@@ -50,6 +50,21 @@ function generateCalendar() {
   for (let i = 0; i < nWeeks; i++) {
     calendar.appendChild(generateWeek(currentDay));
   }
+
+  const sideLabel = document.getElementById('side-label');
+  sideLabel.innerHTML = '';
+  const seen = new Set();
+  for (let i = 0; i < nWeeks * 7; i++) {
+    const d = new Date(lastSunday);
+    d.setDate(lastSunday.getDate() + i);
+    const key = d.getFullYear() + '-' + d.getMonth();
+    if (!seen.has(key)) {
+      seen.add(key);
+      const span = document.createElement('span');
+      span.textContent = d.toLocaleString('default', { month: 'long' }) + ' ' + d.getFullYear();
+      sideLabel.appendChild(span);
+    }
+  }
 }
 
 function saveEvents() {
