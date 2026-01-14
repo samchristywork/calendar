@@ -171,5 +171,8 @@ document.addEventListener('keydown', (event) => {
       nWeeks--;
       generateCalendar();
     }
+  } else if (event.key === 't') {
+    currentDate = new Date();
+    generateCalendar();
   }
 });
