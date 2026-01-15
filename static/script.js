@@ -69,6 +69,14 @@ function generateCalendar() {
 
 function eventText(e) { return typeof e === 'string' ? e : e.text; }
 function eventTime(e) { return typeof e === 'string' ? '' : (e.time || ''); }
+function eventCategory(e) { return typeof e === 'string' ? '' : (e.category || ''); }
+
+function categoryHue(cat) {
+  if (!cat) return null;
+  let h = 0;
+  for (let i = 0; i < cat.length; i++) h = (h * 31 + cat.charCodeAt(i)) & 0xffff;
+  return h % 360;
+}
 
 function saveEvents() {
   fetch('events.json', {
@@ -102,8 +110,9 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
     const text = prompt("Add an event for " + dateText + ":");
     if (!text) return;
     const time = prompt("Time (HH:MM, or leave blank):") || '';
+    const category = prompt("Category (or leave blank):") || '';
     if (!events[dateText]) events[dateText] = [];
-    events[dateText].push({ text: text.trim(), time: time.trim() });
+    events[dateText].push({ text: text.trim(), time: time.trim(), category: category.trim() });
     events[dateText].sort((a, b) => eventTime(a).localeCompare(eventTime(b)));
     saveEvents();
     generateCalendar();
@@ -113,6 +122,10 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
     events[dateText].forEach((event, index) => {
       const eventElement = document.createElement('div');
       eventElement.classList.add('event');
+      const catHue = categoryHue(eventCategory(event));
+      if (catHue !== null) {
+        eventElement.style.backgroundColor = 'hsla(' + catHue + ', 70%, 80%, 0.9)';
+      }
 
       const label = document.createElement('span');
       const t = eventTime(event);
@@ -127,7 +140,9 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
         } else {
           const updatedTime = prompt("Time (HH:MM, or leave blank):", eventTime(event));
           if (updatedTime === null) return;
-          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim() };
+          const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
+          if (updatedCategory === null) return;
+          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim(), category: updatedCategory.trim() };
           events[dateText].sort((a, b) => eventTime(a).localeCompare(eventTime(b)));
         }
         saveEvents();
