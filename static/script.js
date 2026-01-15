@@ -169,6 +169,64 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
   return dayElement;
 }
 
+function exportIcal() {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Calendar//EN',
+    'CALSCALE:GREGORIAN',
+  ];
+
+  const now = new Date();
+  const dtstamp = now.getUTCFullYear() +
+    String(now.getUTCMonth() + 1).padStart(2, '0') +
+    String(now.getUTCDate()).padStart(2, '0') + 'T' +
+    String(now.getUTCHours()).padStart(2, '0') +
+    String(now.getUTCMinutes()).padStart(2, '0') +
+    String(now.getUTCSeconds()).padStart(2, '0') + 'Z';
+
+  let uid = 0;
+  for (const [date, dayEvents] of Object.entries(events)) {
+    const [year, month, day] = date.split('-');
+    for (const event of dayEvents) {
+      const time = eventTime(event);
+      lines.push('BEGIN:VEVENT');
+      lines.push('UID:' + (++uid) + '-' + dtstamp + '@calendar');
+      lines.push('DTSTAMP:' + dtstamp);
+      if (time) {
+        const [hh, mm] = time.split(':');
+        const start = new Date(+year, +month - 1, +day, +hh, +mm);
+        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const fmt = d => d.getFullYear() +
+          String(d.getMonth() + 1).padStart(2, '0') +
+          String(d.getDate()).padStart(2, '0') + 'T' +
+          String(d.getHours()).padStart(2, '0') +
+          String(d.getMinutes()).padStart(2, '0') + '00';
+        lines.push('DTSTART:' + fmt(start));
+        lines.push('DTEND:' + fmt(end));
+      } else {
+        const next = new Date(+year, +month - 1, +day + 1);
+        const fmtDate = d => d.getFullYear() +
+          String(d.getMonth() + 1).padStart(2, '0') +
+          String(d.getDate()).padStart(2, '0');
+        lines.push('DTSTART;VALUE=DATE:' + year + month + day);
+        lines.push('DTEND;VALUE=DATE:' + fmtDate(next));
+      }
+      lines.push('SUMMARY:' + eventText(event).replace(/[\\;,]/g, c => '\\' + c));
+      lines.push('END:VEVENT');
+    }
+  }
+
+  lines.push('END:VCALENDAR');
+  const blob = new Blob([lines.join('\r\n') + '\r\n'], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'events.ics';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 document.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowUp') {
     currentDate.setDate(currentDate.getDate() - 7);
@@ -203,6 +261,8 @@ document.addEventListener('keydown', (event) => {
     generateCalendar();
   } else if (event.key === '?') {
     toggleInstructions();
+  } else if (event.key === 'e') {
+    exportIcal();
   } else if (event.key === 'Escape') {
     const instructions = document.querySelector('.instructions');
     if (!instructions.classList.contains('instructions-hidden')) {
