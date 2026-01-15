@@ -203,5 +203,10 @@ document.addEventListener('keydown', (event) => {
     generateCalendar();
   } else if (event.key === '?') {
     toggleInstructions();
+  } else if (event.key === 'Escape') {
+    const instructions = document.querySelector('.instructions');
+    if (!instructions.classList.contains('instructions-hidden')) {
+      instructions.classList.add('instructions-hidden');
+    }
   }
 });
