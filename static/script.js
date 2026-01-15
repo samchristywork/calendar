@@ -4,7 +4,7 @@ function toggleInstructions() {
 }
 
 const calendar = document.getElementById('calendar');
-let nWeeks = 8;
+let nWeeks = parseInt(localStorage.getItem('nWeeks'), 10) || 8;
 let events = {};
 events = fetch('events.json')
   .then(response => response.json())
@@ -159,19 +159,24 @@ document.addEventListener('keydown', (event) => {
     generateCalendar();
   } else if (event.key === 'w') {
     nWeeks = 1;
+    localStorage.setItem('nWeeks', nWeeks);
     generateCalendar();
   } else if (event.key === 'm') {
     nWeeks = 4;
+    localStorage.setItem('nWeeks', nWeeks);
     generateCalendar();
   } else if (event.key === '+') {
     nWeeks++;
+    localStorage.setItem('nWeeks', nWeeks);
     generateCalendar();
   } else if (event.key === '=') {
     nWeeks++;
+    localStorage.setItem('nWeeks', nWeeks);
     generateCalendar();
   } else if (event.key === '-') {
     if (nWeeks > 1) {
       nWeeks--;
+      localStorage.setItem('nWeeks', nWeeks);
       generateCalendar();
     }
   } else if (event.key === 't') {
