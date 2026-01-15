@@ -70,6 +70,11 @@ function generateCalendar() {
 function eventText(e) { return typeof e === 'string' ? e : e.text; }
 function eventTime(e) { return typeof e === 'string' ? '' : (e.time || ''); }
 function eventCategory(e) { return typeof e === 'string' ? '' : (e.category || ''); }
+function normalizeTime(t) {
+  if (!t) return '';
+  const [h, m] = t.split(':');
+  return h.padStart(2, '0') + ':' + (m || '00');
+}
 
 function categoryHue(cat) {
   if (!cat) return null;
@@ -113,7 +118,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
     const category = prompt("Category (or leave blank):") || '';
     if (!events[dateText]) events[dateText] = [];
     events[dateText].push({ text: text.trim(), time: time.trim(), category: category.trim() });
-    events[dateText].sort((a, b) => eventTime(a).localeCompare(eventTime(b)));
+    events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
     saveEvents();
     generateCalendar();
   });
@@ -143,7 +148,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
           const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
           if (updatedCategory === null) return;
           events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim(), category: updatedCategory.trim() };
-          events[dateText].sort((a, b) => eventTime(a).localeCompare(eventTime(b)));
+          events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
         }
         saveEvents();
         generateCalendar();
