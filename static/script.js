@@ -163,6 +163,9 @@ document.addEventListener('keydown', (event) => {
   } else if (event.key === 'm') {
     nWeeks = 4;
     generateCalendar();
+  } else if (event.key === '+') {
+    nWeeks++;
+    generateCalendar();
   } else if (event.key === '=') {
     nWeeks++;
     generateCalendar();
