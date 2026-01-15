@@ -67,6 +67,9 @@ function generateCalendar() {
   }
 }
 
+function eventText(e) { return typeof e === 'string' ? e : e.text; }
+function eventTime(e) { return typeof e === 'string' ? '' : (e.time || ''); }
+
 function saveEvents() {
   fetch('events.json', {
     method: 'POST',
@@ -96,15 +99,14 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
   dayElement.appendChild(dateTextElement);
 
   dayElement.addEventListener('click', () => {
-    const response = prompt("Add an event for " + dateText + ":");
-    if (response) {
-      if (!events[dateText]) {
-        events[dateText] = [];
-      }
-      events[dateText].push(response);
-      saveEvents();
-      generateCalendar();
-    }
+    const text = prompt("Add an event for " + dateText + ":");
+    if (!text) return;
+    const time = prompt("Time (HH:MM, or leave blank):") || '';
+    if (!events[dateText]) events[dateText] = [];
+    events[dateText].push({ text: text.trim(), time: time.trim() });
+    events[dateText].sort((a, b) => eventTime(a).localeCompare(eventTime(b)));
+    saveEvents();
+    generateCalendar();
   });
 
   if (events[dateText]) {
@@ -113,16 +115,20 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
       eventElement.classList.add('event');
 
       const label = document.createElement('span');
-      label.textContent = event;
+      const t = eventTime(event);
+      label.textContent = t ? t + ' ' + eventText(event) : eventText(event);
       label.addEventListener('click', (e) => {
         e.stopPropagation();
-        const updated = prompt("Edit event:", event);
-        if (updated === null) return;
-        if (updated.trim() === '') {
+        const updatedText = prompt("Edit event:", eventText(event));
+        if (updatedText === null) return;
+        if (updatedText.trim() === '') {
           events[dateText].splice(index, 1);
           if (events[dateText].length === 0) delete events[dateText];
         } else {
-          events[dateText][index] = updated.trim();
+          const updatedTime = prompt("Time (HH:MM, or leave blank):", eventTime(event));
+          if (updatedTime === null) return;
+          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim() };
+          events[dateText].sort((a, b) => eventTime(a).localeCompare(eventTime(b)));
         }
         saveEvents();
         generateCalendar();
@@ -134,9 +140,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
       deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         events[dateText].splice(index, 1);
-        if (events[dateText].length === 0) {
-          delete events[dateText];
-        }
+        if (events[dateText].length === 0) delete events[dateText];
         saveEvents();
         generateCalendar();
       });
