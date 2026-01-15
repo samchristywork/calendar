@@ -6,7 +6,7 @@ function toggleInstructions() {
 const calendar = document.getElementById('calendar');
 let nWeeks = parseInt(localStorage.getItem('nWeeks'), 10) || 8;
 let events = {};
-events = fetch('events.json')
+fetch('events.json')
   .then(response => response.json())
   .then(data => {
     events = data;
