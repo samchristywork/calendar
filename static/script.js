@@ -280,13 +280,9 @@ document.addEventListener('keydown', (event) => {
     localStorage.setItem('nWeeks', nWeeks);
     generateCalendar();
   } else if (event.key === '+') {
-    nWeeks++;
-    localStorage.setItem('nWeeks', nWeeks);
-    generateCalendar();
+    if (nWeeks < 52) { nWeeks++; localStorage.setItem('nWeeks', nWeeks); generateCalendar(); }
   } else if (event.key === '=') {
-    nWeeks++;
-    localStorage.setItem('nWeeks', nWeeks);
-    generateCalendar();
+    if (nWeeks < 52) { nWeeks++; localStorage.setItem('nWeeks', nWeeks); generateCalendar(); }
   } else if (event.key === '-') {
     if (nWeeks > 1) {
       nWeeks--;
