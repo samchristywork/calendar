@@ -102,12 +102,22 @@ function categoryHue(cat) {
   return h % 360;
 }
 
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 4000);
+}
+
 function saveEvents() {
   fetch('events.json', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(events)
-  }).catch(error => console.error('Error saving events:', error));
+  }).then(res => {
+    if (!res.ok) showToast('Error saving events: server returned ' + res.status);
+  }).catch(() => showToast('Error saving events: could not reach server'));
 }
 
 function createDayElement(dateText, hue, isToday, dayOfWeek) {

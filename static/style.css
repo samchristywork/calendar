@@ -121,3 +121,17 @@
 h1 {
   font-size: 1.6rem;
 }
+
+.toast {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(180, 30, 30, 0.92);
+  color: #fff;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.9em;
+  z-index: 100;
+  pointer-events: none;
+}
