@@ -76,6 +76,19 @@ function normalizeTime(t) {
   return h.padStart(2, '0') + ':' + (m || '00');
 }
 
+function promptTime(message, defaultValue) {
+  const timeRe = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+  let value = defaultValue !== undefined ? defaultValue : '';
+  while (true) {
+    const input = prompt(message, value);
+    if (input === null) return null;
+    const trimmed = input.trim();
+    if (trimmed === '' || timeRe.test(trimmed)) return trimmed;
+    alert('Please enter a time in HH:MM format (e.g. 09:30), or leave blank.');
+    value = trimmed;
+  }
+}
+
 function categoryHue(cat) {
   if (!cat) return null;
   let h = 0;
@@ -114,10 +127,11 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
   dayElement.addEventListener('click', () => {
     const text = prompt("Add an event for " + dateText + ":");
     if (!text) return;
-    const time = prompt("Time (HH:MM, or leave blank):") || '';
+    const time = promptTime("Time (HH:MM, or leave blank):");
+    if (time === null) return;
     const category = prompt("Category (or leave blank):") || '';
     if (!events[dateText]) events[dateText] = [];
-    events[dateText].push({ text: text.trim(), time: time.trim(), category: category.trim() });
+    events[dateText].push({ text: text.trim(), time: time, category: category.trim() });
     events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
     saveEvents();
     generateCalendar();
@@ -143,7 +157,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
           events[dateText].splice(index, 1);
           if (events[dateText].length === 0) delete events[dateText];
         } else {
-          const updatedTime = prompt("Time (HH:MM, or leave blank):", eventTime(event));
+          const updatedTime = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
           if (updatedTime === null) return;
           const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
           if (updatedCategory === null) return;
