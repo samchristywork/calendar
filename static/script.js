@@ -238,6 +238,8 @@ function exportIcal() {
         lines.push('DTEND;VALUE=DATE:' + fmtDate(next));
       }
       lines.push('SUMMARY:' + eventText(event).replace(/[\\;,]/g, c => '\\' + c));
+      const cat = eventCategory(event);
+      if (cat) lines.push('CATEGORIES:' + cat.replace(/[\\;,]/g, c => '\\' + c));
       lines.push('END:VEVENT');
     }
   }
