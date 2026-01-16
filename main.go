@@ -10,12 +10,12 @@ import (
 
 func eventsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		defer r.Body.Close()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
 			http.Error(w, "Could not read request body", http.StatusBadRequest)
 			return
 		}
-		defer r.Body.Close()
 
 		if !json.Valid(body) {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
