@@ -89,6 +89,12 @@ function promptTime(message, defaultValue) {
   }
 }
 
+function stableHash(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
 function categoryHue(cat) {
   if (!cat) return null;
   let h = 0;
@@ -204,13 +210,13 @@ function exportIcal() {
     String(now.getUTCMinutes()).padStart(2, '0') +
     String(now.getUTCSeconds()).padStart(2, '0') + 'Z';
 
-  let uid = 0;
   for (const [date, dayEvents] of Object.entries(events)) {
     const [year, month, day] = date.split('-');
     for (const event of dayEvents) {
       const time = eventTime(event);
+      const uidKey = date + '\x00' + eventText(event) + '\x00' + time + '\x00' + eventCategory(event);
       lines.push('BEGIN:VEVENT');
-      lines.push('UID:' + (++uid) + '-' + dtstamp + '@calendar');
+      lines.push('UID:' + stableHash(uidKey) + '@calendar');
       lines.push('DTSTAMP:' + dtstamp);
       if (time) {
         const [hh, mm] = time.split(':');
