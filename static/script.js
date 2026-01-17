@@ -69,6 +69,7 @@ function generateCalendar() {
 
 function eventText(e) { return typeof e === 'string' ? e : e.text; }
 function eventTime(e) { return typeof e === 'string' ? '' : (e.time || ''); }
+function eventEndTime(e) { return typeof e === 'string' ? '' : (e.endTime || ''); }
 function eventCategory(e) { return typeof e === 'string' ? '' : (e.category || ''); }
 function eventNotes(e) { return typeof e === 'string' ? '' : (e.notes || ''); }
 function normalizeTime(t) {
@@ -146,10 +147,12 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
     if (!text) return;
     const time = promptTime("Time (HH:MM, or leave blank):");
     if (time === null) return;
+    const endTime = time ? (promptTime("End time (HH:MM, or leave blank):") || '') : '';
+    if (endTime === null) return;
     const category = prompt("Category (or leave blank):") || '';
     const notes = prompt("Notes (or leave blank):") || '';
     if (!events[dateText]) events[dateText] = [];
-    events[dateText].push({ text: text.trim(), time: time, category: category.trim(), notes: notes.trim() });
+    events[dateText].push({ text: text.trim(), time: time, endTime: endTime, category: category.trim(), notes: notes.trim() });
     events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
     saveEvents();
     generateCalendar();
@@ -166,7 +169,9 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
 
       const label = document.createElement('span');
       const t = eventTime(event);
-      label.textContent = t ? t + ' ' + eventText(event) : eventText(event);
+      const et = eventEndTime(event);
+      const timePrefix = t ? (et ? t + '-' + et : t) + ' ' : '';
+      label.textContent = timePrefix + eventText(event);
       if (eventNotes(event)) label.title = eventNotes(event);
       label.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -178,11 +183,13 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
         } else {
           const updatedTime = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
           if (updatedTime === null) return;
+          const updatedEndTime = updatedTime ? (promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) || '') : '';
+          if (updatedEndTime === null) return;
           const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
           if (updatedCategory === null) return;
           const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
           if (updatedNotes === null) return;
-          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim(), category: updatedCategory.trim(), notes: updatedNotes.trim() };
+          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim(), endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
           events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
         }
         saveEvents();
@@ -236,7 +243,10 @@ function exportIcal() {
       if (time) {
         const [hh, mm] = time.split(':');
         const start = new Date(+year, +month - 1, +day, +hh, +mm);
-        const end = new Date(start.getTime() + 60 * 60 * 1000);
+        const endTimeVal = eventEndTime(event);
+        const end = endTimeVal
+          ? (() => { const [eh, em] = endTimeVal.split(':'); return new Date(+year, +month - 1, +day, +eh, +em); })()
+          : new Date(start.getTime() + 60 * 60 * 1000);
         const fmt = d => d.getUTCFullYear() +
           String(d.getUTCMonth() + 1).padStart(2, '0') +
           String(d.getUTCDate()).padStart(2, '0') + 'T' +
