@@ -55,6 +55,11 @@
   font-style: italic;
 }
 
+.drag-over {
+  outline: 2px dashed rgba(0, 0, 0, 0.4);
+  outline-offset: -2px;
+}
+
 .side-label {
   position: fixed;
   left: 0;

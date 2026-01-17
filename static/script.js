@@ -216,6 +216,30 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
   dateTextElement.style.fontSize = '0.75em';
   dayElement.appendChild(dateTextElement);
 
+  dayElement.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dayElement.classList.add('drag-over');
+  });
+  dayElement.addEventListener('dragleave', () => {
+    dayElement.classList.remove('drag-over');
+  });
+  dayElement.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dayElement.classList.remove('drag-over');
+    let data;
+    try { data = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
+    const { baseDate, baseIndex } = data;
+    if (baseDate === dateText) return;
+    const event = events[baseDate][baseIndex];
+    events[baseDate].splice(baseIndex, 1);
+    if (events[baseDate].length === 0) delete events[baseDate];
+    if (!events[dateText]) events[dateText] = [];
+    events[dateText].push(event);
+    events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+    saveEvents();
+    generateCalendar();
+  });
+
   dayElement.addEventListener('click', () => {
     const text = prompt("Add an event for " + dateText + ":");
     if (!text) return;
@@ -243,6 +267,13 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
       const eventElement = document.createElement('div');
       eventElement.classList.add('event');
       if (!isOriginal) eventElement.classList.add('event-recurrence');
+      if (isOriginal) {
+        eventElement.draggable = true;
+        eventElement.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({ baseDate, baseIndex }));
+          e.stopPropagation();
+        });
+      }
       const catHue = categoryHue(eventCategory(event));
       if (catHue !== null) {
         eventElement.style.backgroundColor = 'hsla(' + catHue + ', 70%, 80%, 0.9)';
