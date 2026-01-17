@@ -70,6 +70,7 @@ function generateCalendar() {
 function eventText(e) { return typeof e === 'string' ? e : e.text; }
 function eventTime(e) { return typeof e === 'string' ? '' : (e.time || ''); }
 function eventCategory(e) { return typeof e === 'string' ? '' : (e.category || ''); }
+function eventNotes(e) { return typeof e === 'string' ? '' : (e.notes || ''); }
 function normalizeTime(t) {
   if (!t) return '';
   const [h, m] = t.split(':');
@@ -146,8 +147,9 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
     const time = promptTime("Time (HH:MM, or leave blank):");
     if (time === null) return;
     const category = prompt("Category (or leave blank):") || '';
+    const notes = prompt("Notes (or leave blank):") || '';
     if (!events[dateText]) events[dateText] = [];
-    events[dateText].push({ text: text.trim(), time: time, category: category.trim() });
+    events[dateText].push({ text: text.trim(), time: time, category: category.trim(), notes: notes.trim() });
     events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
     saveEvents();
     generateCalendar();
@@ -165,6 +167,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
       const label = document.createElement('span');
       const t = eventTime(event);
       label.textContent = t ? t + ' ' + eventText(event) : eventText(event);
+      if (eventNotes(event)) label.title = eventNotes(event);
       label.addEventListener('click', (e) => {
         e.stopPropagation();
         const updatedText = prompt("Edit event:", eventText(event));
@@ -177,7 +180,9 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
           if (updatedTime === null) return;
           const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
           if (updatedCategory === null) return;
-          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim(), category: updatedCategory.trim() };
+          const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
+          if (updatedNotes === null) return;
+          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim(), category: updatedCategory.trim(), notes: updatedNotes.trim() };
           events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
         }
         saveEvents();
@@ -250,6 +255,8 @@ function exportIcal() {
       lines.push('SUMMARY:' + eventText(event).replace(/[\\;,]/g, c => '\\' + c));
       const cat = eventCategory(event);
       if (cat) lines.push('CATEGORIES:' + cat.replace(/[\\;,]/g, c => '\\' + c));
+      const notes = eventNotes(event);
+      if (notes) lines.push('DESCRIPTION:' + notes.replace(/[\\;,]/g, c => '\\' + c).replace(/\n/g, '\\n'));
       lines.push('END:VEVENT');
     }
   }
