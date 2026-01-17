@@ -50,6 +50,11 @@
   opacity: 1;
 }
 
+.event-recurrence {
+  opacity: 0.75;
+  font-style: italic;
+}
+
 .side-label {
   position: fixed;
   left: 0;

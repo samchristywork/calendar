@@ -21,7 +21,51 @@ function hash(month) {
   return (month * 123123123) % 360;
 }
 
-function generateWeek(currentDay) {
+function toDateStr(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+function buildEffectiveEvents(visibleStart, visibleEnd) {
+  const effective = {};
+  for (const [date, dayEvents] of Object.entries(events)) {
+    effective[date] = dayEvents.map((e, idx) => ({ ...e, _baseDate: date, _baseIndex: idx }));
+  }
+  for (const [date, dayEvents] of Object.entries(events)) {
+    const [y, m, d] = date.split('-').map(Number);
+    for (let idx = 0; idx < dayEvents.length; idx++) {
+      const event = dayEvents[idx];
+      const recur = eventRecurrence(event);
+      if (!recur) continue;
+      let current = new Date(y, m - 1, d);
+      let count = 1;
+      const until = recur.until
+        ? new Date(+recur.until.slice(0, 4), +recur.until.slice(4, 6) - 1, +recur.until.slice(6, 8))
+        : null;
+      while (true) {
+        switch (recur.freq) {
+          case 'DAILY':   current.setDate(current.getDate() + 1); break;
+          case 'WEEKLY':  current.setDate(current.getDate() + 7); break;
+          case 'MONTHLY': current.setMonth(current.getMonth() + 1); break;
+          case 'YEARLY':  current.setFullYear(current.getFullYear() + 1); break;
+        }
+        count++;
+        if (recur.count && count > recur.count) break;
+        if (until && current > until) break;
+        if (current > visibleEnd) break;
+        if (current >= visibleStart) {
+          const dateStr = toDateStr(current);
+          if (!effective[dateStr]) effective[dateStr] = [];
+          effective[dateStr].push({ ...event, _baseDate: date, _baseIndex: idx });
+        }
+      }
+    }
+  }
+  return effective;
+}
+
+function generateWeek(currentDay, effectiveEvents) {
   const weekElement = document.createElement('div');
   weekElement.classList.add('row');
   weekElement.style.height = 'calc((100vh - 2rem) / ' + nWeeks + ')';
@@ -32,7 +76,7 @@ function generateWeek(currentDay) {
       (currentDay.getMonth() + 1).toString().padStart(2, '0') + "-" +
       currentDay.getDate().toString().padStart(2, '0');
     const isToday = (currentDay.toDateString() === new Date().toDateString());
-    const dayElement = createDayElement(dateText, hash(currentDay.getMonth()), isToday, i);
+    const dayElement = createDayElement(dateText, hash(currentDay.getMonth()), isToday, i, effectiveEvents[dateText] || []);
     currentDay.setDate(currentDay.getDate() + 1);
     weekElement.appendChild(dayElement);
   }
@@ -44,11 +88,15 @@ let currentDate = new Date();
 function generateCalendar() {
   let lastSunday = new Date(currentDate);
   lastSunday.setDate(currentDate.getDate() - currentDate.getDay());
+  const visibleStart = new Date(lastSunday);
+  const visibleEnd = new Date(lastSunday);
+  visibleEnd.setDate(visibleEnd.getDate() + nWeeks * 7 - 1);
+  const effectiveEvents = buildEffectiveEvents(visibleStart, visibleEnd);
   let currentDay = new Date(lastSunday);
   calendar.innerHTML = '';
 
   for (let i = 0; i < nWeeks; i++) {
-    calendar.appendChild(generateWeek(currentDay));
+    calendar.appendChild(generateWeek(currentDay, effectiveEvents));
   }
 
   const sideLabel = document.getElementById('side-label');
@@ -148,7 +196,7 @@ function saveEvents() {
   }).catch(() => showToast('Error saving events: could not reach server'));
 }
 
-function createDayElement(dateText, hue, isToday, dayOfWeek) {
+function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
   const dayElement = document.createElement('div');
   dayElement.classList.add('day');
   dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 90%)';
@@ -187,10 +235,14 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
     generateCalendar();
   });
 
-  if (events[dateText]) {
-    events[dateText].forEach((event, index) => {
+  displayEvents.forEach((event) => {
+    const isOriginal = event._baseDate === dateText;
+    const baseDate = event._baseDate;
+    const baseIndex = event._baseIndex;
+
       const eventElement = document.createElement('div');
       eventElement.classList.add('event');
+      if (!isOriginal) eventElement.classList.add('event-recurrence');
       const catHue = categoryHue(eventCategory(event));
       if (catHue !== null) {
         eventElement.style.backgroundColor = 'hsla(' + catHue + ', 70%, 80%, 0.9)';
@@ -203,48 +255,51 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
       const recurSuffix = eventRecurrence(event) ? ' ↻' : '';
       label.textContent = timePrefix + eventText(event) + recurSuffix;
       if (eventNotes(event)) label.title = eventNotes(event);
-      label.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const updatedText = prompt("Edit event:", eventText(event));
-        if (updatedText === null) return;
-        if (updatedText.trim() === '') {
-          events[dateText].splice(index, 1);
-          if (events[dateText].length === 0) delete events[dateText];
-        } else {
-          const updatedTime = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
-          if (updatedTime === null) return;
-          const updatedEndTime = updatedTime ? (promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) || '') : '';
-          if (updatedEndTime === null) return;
-          const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
-          if (updatedCategory === null) return;
-          const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
-          if (updatedNotes === null) return;
-          const updatedRecurrence = promptRecurrence(eventRecurrence(event));
-          const updatedEvent = { text: updatedText.trim(), time: updatedTime.trim(), endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
-          if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
-          events[dateText][index] = updatedEvent;
-          events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
-        }
-        saveEvents();
-        generateCalendar();
-      });
+      if (isOriginal) {
+        label.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const updatedText = prompt("Edit event:", eventText(event));
+          if (updatedText === null) return;
+          if (updatedText.trim() === '') {
+            events[baseDate].splice(baseIndex, 1);
+            if (events[baseDate].length === 0) delete events[baseDate];
+          } else {
+            const updatedTime = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
+            if (updatedTime === null) return;
+            const updatedEndTime = updatedTime ? (promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) || '') : '';
+            if (updatedEndTime === null) return;
+            const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
+            if (updatedCategory === null) return;
+            const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
+            if (updatedNotes === null) return;
+            const updatedRecurrence = promptRecurrence(eventRecurrence(event));
+            const updatedEvent = { text: updatedText.trim(), time: updatedTime.trim(), endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
+            if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
+            events[baseDate][baseIndex] = updatedEvent;
+            events[baseDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+          }
+          saveEvents();
+          generateCalendar();
+        });
+      }
 
       const deleteBtn = document.createElement('span');
       deleteBtn.classList.add('event-delete');
       deleteBtn.textContent = '×';
-      deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        events[dateText].splice(index, 1);
-        if (events[dateText].length === 0) delete events[dateText];
-        saveEvents();
-        generateCalendar();
-      });
+      if (isOriginal) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          events[baseDate].splice(baseIndex, 1);
+          if (events[baseDate].length === 0) delete events[baseDate];
+          saveEvents();
+          generateCalendar();
+        });
+      }
 
       eventElement.appendChild(label);
       eventElement.appendChild(deleteBtn);
       dayElement.appendChild(eventElement);
-    });
-  }
+  });
 
   return dayElement;
 }
