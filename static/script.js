@@ -72,10 +72,36 @@ function eventTime(e) { return typeof e === 'string' ? '' : (e.time || ''); }
 function eventEndTime(e) { return typeof e === 'string' ? '' : (e.endTime || ''); }
 function eventCategory(e) { return typeof e === 'string' ? '' : (e.category || ''); }
 function eventNotes(e) { return typeof e === 'string' ? '' : (e.notes || ''); }
+function eventRecurrence(e) { return typeof e === 'string' ? null : (e.recurrence || null); }
 function normalizeTime(t) {
   if (!t) return '';
   const [h, m] = t.split(':');
   return h.padStart(2, '0') + ':' + (m || '00');
+}
+
+function promptRecurrence(existing) {
+  const freqs = ['daily', 'weekly', 'monthly', 'yearly'];
+  const defaultFreq = existing ? existing.freq.toLowerCase() : '';
+  let freq = '';
+  while (true) {
+    const input = (prompt("Repeat? (daily / weekly / monthly / yearly, or leave blank):", defaultFreq) || '').trim().toLowerCase();
+    if (input === null) return null;
+    if (input === '' || freqs.includes(input)) { freq = input; break; }
+    alert('Enter: daily, weekly, monthly, yearly, or leave blank.');
+  }
+  if (!freq) return null;
+  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+  const defaultEnd = existing ? (existing.count ? existing.count + 'x' : existing.until ? existing.until : '') : '';
+  let end = null;
+  while (true) {
+    const input = (prompt("Ends after how many occurrences (e.g. 10x), by date (YYYY-MM-DD), or leave blank:", defaultEnd) || '').trim();
+    if (input === null) return null;
+    if (input === '') { break; }
+    if (/^\d+x$/i.test(input)) { end = { count: parseInt(input) }; break; }
+    if (dateRe.test(input) && !isNaN(Date.parse(input))) { end = { until: input.replace(/-/g, '') }; break; }
+    alert('Enter a count like 10x, a date like 2026-12-31, or leave blank.');
+  }
+  return { freq: freq.toUpperCase(), ...(end || {}) };
 }
 
 function promptTime(message, defaultValue) {
@@ -151,8 +177,11 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
     if (endTime === null) return;
     const category = prompt("Category (or leave blank):") || '';
     const notes = prompt("Notes (or leave blank):") || '';
+    const recurrence = promptRecurrence(null);
     if (!events[dateText]) events[dateText] = [];
-    events[dateText].push({ text: text.trim(), time: time, endTime: endTime, category: category.trim(), notes: notes.trim() });
+    const newEvent = { text: text.trim(), time: time, endTime: endTime, category: category.trim(), notes: notes.trim() };
+    if (recurrence) newEvent.recurrence = recurrence;
+    events[dateText].push(newEvent);
     events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
     saveEvents();
     generateCalendar();
@@ -171,7 +200,8 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
       const t = eventTime(event);
       const et = eventEndTime(event);
       const timePrefix = t ? (et ? t + '-' + et : t) + ' ' : '';
-      label.textContent = timePrefix + eventText(event);
+      const recurSuffix = eventRecurrence(event) ? ' ↻' : '';
+      label.textContent = timePrefix + eventText(event) + recurSuffix;
       if (eventNotes(event)) label.title = eventNotes(event);
       label.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -189,7 +219,10 @@ function createDayElement(dateText, hue, isToday, dayOfWeek) {
           if (updatedCategory === null) return;
           const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
           if (updatedNotes === null) return;
-          events[dateText][index] = { text: updatedText.trim(), time: updatedTime.trim(), endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
+          const updatedRecurrence = promptRecurrence(eventRecurrence(event));
+          const updatedEvent = { text: updatedText.trim(), time: updatedTime.trim(), endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
+          if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
+          events[dateText][index] = updatedEvent;
           events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
         }
         saveEvents();
@@ -263,6 +296,13 @@ function exportIcal() {
         lines.push('DTEND;VALUE=DATE:' + fmtDate(next));
       }
       lines.push('SUMMARY:' + eventText(event).replace(/[\\;,]/g, c => '\\' + c));
+      const recur = eventRecurrence(event);
+      if (recur) {
+        let rrule = 'RRULE:FREQ=' + recur.freq;
+        if (recur.count) rrule += ';COUNT=' + recur.count;
+        else if (recur.until) rrule += ';UNTIL=' + recur.until;
+        lines.push(rrule);
+      }
       const cat = eventCategory(event);
       if (cat) lines.push('CATEGORIES:' + cat.replace(/[\\;,]/g, c => '\\' + c));
       const notes = eventNotes(event);
