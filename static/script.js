@@ -4,6 +4,7 @@ function toggleInstructions() {
 }
 
 const THEMES = [null, 'dark', 'light'];
+const THEME_LABELS = { null: 'Auto (system)', dark: 'Dark', light: 'Light' };
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme');
   const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
@@ -14,6 +15,7 @@ function toggleTheme() {
     document.documentElement.removeAttribute('data-theme');
     localStorage.removeItem('theme');
   }
+  showToast('Theme: ' + THEME_LABELS[next]);
 }
 (function applyTheme() {
   const saved = localStorage.getItem('theme');
@@ -236,12 +238,12 @@ function categoryHue(cat) {
   return h % 360;
 }
 
-function showToast(message) {
+function showToast(message, error = false) {
   const toast = document.createElement('div');
-  toast.className = 'toast';
+  toast.className = 'toast' + (error ? '' : ' toast-info');
   toast.textContent = message;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
+  setTimeout(() => toast.remove(), 3000);
 }
 
 function saveEvents() {
@@ -250,8 +252,8 @@ function saveEvents() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(events)
   }).then(res => {
-    if (!res.ok) showToast('Error saving events: server returned ' + res.status);
-  }).catch(() => showToast('Error saving events: could not reach server'));
+    if (!res.ok) showToast('Error saving events: server returned ' + res.status, true);
+  }).catch(() => showToast('Error saving events: could not reach server', true));
 }
 
 function addEventForDate(dateText) {
