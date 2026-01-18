@@ -199,7 +199,7 @@ h1 {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --day-s: 35%;
     --day-l: 22%;
     --weekend-s: 30%;
@@ -219,12 +219,41 @@ h1 {
     --drag-over-outline: rgba(255, 255, 255, 0.4);
   }
 
-  .instructions {
+  :root:not([data-theme="light"]) .instructions {
     border-color: rgba(255, 255, 255, 0.2);
     color: var(--text-color);
   }
 
-  #search {
+  :root:not([data-theme="light"]) #search {
     border-color: rgba(255, 255, 255, 0.2);
   }
+}
+
+:root[data-theme="dark"] {
+  --day-s: 35%;
+  --day-l: 22%;
+  --weekend-s: 30%;
+  --weekend-l: 18%;
+  --today-border: rgba(255, 255, 255, 0.6);
+  --header-bg: #2a2a2a;
+  --side-label-bg: #333;
+  --body-bg: #1a1a1a;
+  --text-color: #ddd;
+  --event-bg: rgba(255, 255, 255, 0.08);
+  --event-cat-s: 45%;
+  --event-cat-l: 35%;
+  --instructions-bg: rgba(40, 40, 40, 0.95);
+  --instructions-hover-bg: rgba(60, 60, 60, 0.95);
+  --search-bg: rgba(40, 40, 40, 0.92);
+  --day-border: rgba(255, 255, 255, 0.08);
+  --drag-over-outline: rgba(255, 255, 255, 0.4);
+}
+
+:root[data-theme="dark"] .instructions {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-color);
+}
+
+:root[data-theme="dark"] #search {
+  border-color: rgba(255, 255, 255, 0.2);
 }

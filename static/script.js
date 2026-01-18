@@ -3,6 +3,23 @@ function toggleInstructions() {
   instructions.classList.toggle('instructions-hidden');
 }
 
+const THEMES = [null, 'dark', 'light'];
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = THEMES[(THEMES.indexOf(current) + 1) % THEMES.length];
+  if (next) {
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.removeItem('theme');
+  }
+}
+(function applyTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+
 const calendar = document.getElementById('calendar');
 let nWeeks = parseInt(localStorage.getItem('nWeeks'), 10) || 8;
 let events = {};
@@ -511,6 +528,8 @@ document.addEventListener('keydown', (event) => {
     generateCalendar();
   } else if (event.key === 'n') {
     addEventForDate(toDateStr(new Date()));
+  } else if (event.key === 'd') {
+    toggleTheme();
   } else if (event.key === '?') {
     toggleInstructions();
   } else if (event.key === 'e') {
