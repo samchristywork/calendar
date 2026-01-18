@@ -543,3 +543,9 @@ document.addEventListener('keydown', (event) => {
     }
   }
 });
+
+document.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  currentDate.setDate(currentDate.getDate() + (e.deltaY > 0 ? 7 : -7));
+  generateCalendar();
+}, { passive: false });
