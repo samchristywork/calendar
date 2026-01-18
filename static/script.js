@@ -267,15 +267,9 @@ function addEventForDate(dateText) {
 function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
   const dayElement = document.createElement('div');
   dayElement.classList.add('day');
-  dayElement.style.backgroundColor = 'hsla(' + hue + ', 100%, 90%)';
-
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    dayElement.style.backgroundColor = 'hsla(' + hue + ', 90%, 85%)';
-  }
-
-  if (isToday) {
-    dayElement.style.border = '2px solid rgba(0, 0, 0, 0.5)';
-  }
+  dayElement.style.setProperty('--hue', hue);
+  if (dayOfWeek === 0 || dayOfWeek === 6) dayElement.classList.add('weekend');
+  if (isToday) dayElement.classList.add('today');
 
   const dateTextElement = document.createElement('div');
   dateTextElement.textContent = dateText;
@@ -335,7 +329,8 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
       }
       const catHue = categoryHue(eventCategory(event));
       if (catHue !== null) {
-        eventElement.style.backgroundColor = 'hsla(' + catHue + ', 70%, 80%, 0.9)';
+        eventElement.classList.add('event-cat');
+        eventElement.style.setProperty('--cat-hue', catHue);
       }
 
       const label = document.createElement('span');
