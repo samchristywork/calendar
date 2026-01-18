@@ -143,6 +143,11 @@ function eventEndDate(e) { return typeof e === 'string' ? '' : (e.endDate || '')
 function eventCategory(e) { return typeof e === 'string' ? '' : (e.category || ''); }
 function eventNotes(e) { return typeof e === 'string' ? '' : (e.notes || ''); }
 function eventRecurrence(e) { return typeof e === 'string' ? null : (e.recurrence || null); }
+function getSearchQuery() {
+  const el = document.getElementById('search');
+  return el ? el.value.trim().toLowerCase() : '';
+}
+
 function normalizeTime(t) {
   if (!t) return '';
   const [h, m] = t.split(':');
@@ -303,7 +308,15 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
     generateCalendar();
   });
 
-  displayEvents.forEach((event) => {
+  const query = getSearchQuery();
+  const visibleEvents = query
+    ? displayEvents.filter(e =>
+        eventText(e).toLowerCase().includes(query) ||
+        eventCategory(e).toLowerCase().includes(query) ||
+        eventNotes(e).toLowerCase().includes(query))
+    : displayEvents;
+
+  visibleEvents.forEach((event) => {
     const isOriginal = event._baseDate === dateText;
     const baseDate = event._baseDate;
     const baseIndex = event._baseIndex;
@@ -466,6 +479,12 @@ function exportIcal() {
 }
 
 document.addEventListener('keydown', (event) => {
+  if (document.activeElement === document.getElementById('search')) return;
+  if (event.key === '/') {
+    event.preventDefault();
+    document.getElementById('search').focus();
+    return;
+  }
   if (event.key === 'ArrowUp') {
     currentDate.setDate(currentDate.getDate() - 7);
     generateCalendar();

@@ -60,6 +60,19 @@
   outline-offset: -2px;
 }
 
+#search {
+  position: fixed;
+  top: 0.3rem;
+  right: 1rem;
+  z-index: 20;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+  font-size: 0.85em;
+  background: rgba(255, 255, 255, 0.92);
+  width: 14rem;
+}
+
 .side-label {
   position: fixed;
   left: 0;
