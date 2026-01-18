@@ -345,7 +345,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
       const spanPrefix = (ed && !isOriginal) ? '↦ ' : '';
       const spanSuffix = (ed && isOriginal) ? ' ↦' : '';
       label.textContent = spanPrefix + timePrefix + eventText(event) + recurSuffix + spanSuffix;
-      if (eventNotes(event)) label.title = eventNotes(event);
+      label.title = label.textContent + (eventNotes(event) ? '\n' + eventNotes(event) : '');
       if (isOriginal) {
         label.addEventListener('click', (e) => {
           e.stopPropagation();
