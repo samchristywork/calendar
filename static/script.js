@@ -237,6 +237,33 @@ function saveEvents() {
   }).catch(() => showToast('Error saving events: could not reach server'));
 }
 
+function addEventForDate(dateText) {
+  const text = prompt("Add an event for " + dateText + ":");
+  if (!text) return;
+  const endDate = promptEndDate(dateText, '');
+  if (endDate === null) return;
+  let time = '', endTime = '';
+  if (!endDate) {
+    const t = promptTime("Time (HH:MM, or leave blank):");
+    if (t === null) return;
+    time = t;
+    const et = time ? (promptTime("End time (HH:MM, or leave blank):") || '') : '';
+    if (et === null) return;
+    endTime = et;
+  }
+  const category = prompt("Category (or leave blank):") || '';
+  const notes = prompt("Notes (or leave blank):") || '';
+  const recurrence = promptRecurrence(null);
+  if (!events[dateText]) events[dateText] = [];
+  const newEvent = { text: text.trim(), time, endTime, category: category.trim(), notes: notes.trim() };
+  if (endDate) newEvent.endDate = endDate;
+  if (recurrence) newEvent.recurrence = recurrence;
+  events[dateText].push(newEvent);
+  events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+  saveEvents();
+  generateCalendar();
+}
+
 function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
   const dayElement = document.createElement('div');
   dayElement.classList.add('day');
@@ -281,32 +308,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
     generateCalendar();
   });
 
-  dayElement.addEventListener('click', () => {
-    const text = prompt("Add an event for " + dateText + ":");
-    if (!text) return;
-    const endDate = promptEndDate(dateText, '');
-    if (endDate === null) return;
-    let time = '', endTime = '';
-    if (!endDate) {
-      const t = promptTime("Time (HH:MM, or leave blank):");
-      if (t === null) return;
-      time = t;
-      const et = time ? (promptTime("End time (HH:MM, or leave blank):") || '') : '';
-      if (et === null) return;
-      endTime = et;
-    }
-    const category = prompt("Category (or leave blank):") || '';
-    const notes = prompt("Notes (or leave blank):") || '';
-    const recurrence = promptRecurrence(null);
-    if (!events[dateText]) events[dateText] = [];
-    const newEvent = { text: text.trim(), time, endTime, category: category.trim(), notes: notes.trim() };
-    if (endDate) newEvent.endDate = endDate;
-    if (recurrence) newEvent.recurrence = recurrence;
-    events[dateText].push(newEvent);
-    events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
-    saveEvents();
-    generateCalendar();
-  });
+  dayElement.addEventListener('click', () => addEventForDate(dateText));
 
   const query = getSearchQuery();
   const visibleEvents = query
@@ -512,6 +514,8 @@ document.addEventListener('keydown', (event) => {
   } else if (event.key === 't') {
     currentDate = new Date();
     generateCalendar();
+  } else if (event.key === 'n') {
+    addEventForDate(toDateStr(new Date()));
   } else if (event.key === '?') {
     toggleInstructions();
   } else if (event.key === 'e') {
