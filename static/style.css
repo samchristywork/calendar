@@ -93,6 +93,10 @@ body {
   font-style: italic;
 }
 
+.event-recurrence span:first-child {
+  cursor: default;
+}
+
 .drag-over {
   outline: 2px dashed var(--drag-over-outline);
   outline-offset: -2px;
