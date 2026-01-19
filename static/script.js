@@ -408,6 +408,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
       if (isOriginal) {
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (!confirm('Delete "' + eventText(event) + '"?')) return;
           events[baseDate].splice(baseIndex, 1);
           if (events[baseDate].length === 0) delete events[baseDate];
           saveEvents();
