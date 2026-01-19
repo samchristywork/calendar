@@ -544,8 +544,11 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+let wheelCooldown = null;
 document.addEventListener('wheel', (e) => {
   e.preventDefault();
+  if (wheelCooldown) return;
   currentDate.setDate(currentDate.getDate() + (e.deltaY > 0 ? 7 : -7));
   generateCalendar();
+  wheelCooldown = setTimeout(() => { wheelCooldown = null; }, 200);
 }, { passive: false });
