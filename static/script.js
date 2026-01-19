@@ -268,7 +268,7 @@ function addEventForDate(dateText) {
     const t = promptTime("Time (HH:MM, or leave blank):");
     if (t === null) return;
     time = t;
-    const et = time ? (promptTime("End time (HH:MM, or leave blank):") || '') : '';
+    const et = time ? promptTime("End time (HH:MM, or leave blank):") : '';
     if (et === null) return;
     endTime = et;
   }
@@ -380,7 +380,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
               const t = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
               if (t === null) return;
               updatedTime = t;
-              const et = updatedTime ? (promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) || '') : '';
+              const et = updatedTime ? promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) : '';
               if (et === null) return;
               updatedEndTime = et;
             }
