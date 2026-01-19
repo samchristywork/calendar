@@ -272,8 +272,10 @@ function addEventForDate(dateText) {
     if (et === null) return;
     endTime = et;
   }
-  const category = prompt("Category (or leave blank):") || '';
-  const notes = prompt("Notes (or leave blank):") || '';
+  const category = prompt("Category (or leave blank):");
+  if (category === null) return;
+  const notes = prompt("Notes (or leave blank):");
+  if (notes === null) return;
   const recurrence = promptRecurrence(null);
   if (!events[dateText]) events[dateText] = [];
   const newEvent = { text: text.trim(), time, endTime, category: category.trim(), notes: notes.trim() };
