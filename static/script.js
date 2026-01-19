@@ -192,8 +192,9 @@ function promptRecurrence(existing) {
   const defaultFreq = existing ? existing.freq.toLowerCase() : '';
   let freq = '';
   while (true) {
-    const input = (prompt("Repeat? (daily / weekly / monthly / yearly, or leave blank):", defaultFreq) || '').trim().toLowerCase();
-    if (input === null) return null;
+    const raw = prompt("Repeat? (daily / weekly / monthly / yearly, or leave blank):", defaultFreq);
+    if (raw === null) return null;
+    const input = raw.trim().toLowerCase();
     if (input === '' || freqs.includes(input)) { freq = input; break; }
     alert('Enter: daily, weekly, monthly, yearly, or leave blank.');
   }
@@ -202,8 +203,9 @@ function promptRecurrence(existing) {
   const defaultEnd = existing ? (existing.count ? existing.count + 'x' : existing.until ? existing.until : '') : '';
   let end = null;
   while (true) {
-    const input = (prompt("Ends after how many occurrences (e.g. 10x), by date (YYYY-MM-DD), or leave blank:", defaultEnd) || '').trim();
-    if (input === null) return null;
+    const raw = prompt("Ends after how many occurrences (e.g. 10x), by date (YYYY-MM-DD), or leave blank:", defaultEnd);
+    if (raw === null) return null;
+    const input = raw.trim();
     if (input === '') { break; }
     if (/^\d+x$/i.test(input)) { end = { count: parseInt(input) }; break; }
     if (dateRe.test(input) && !isNaN(Date.parse(input))) { end = { until: input.replace(/-/g, '') }; break; }
