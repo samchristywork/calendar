@@ -93,6 +93,26 @@ body {
   font-style: italic;
 }
 
+.event-done span:first-child {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.event-check {
+  cursor: pointer;
+  margin-left: 3px;
+  flex-shrink: 0;
+  opacity: 0.35;
+}
+
+.event-check:hover {
+  opacity: 1;
+}
+
+.event-done .event-check {
+  opacity: 0.8;
+}
+
 .event-recurrence span:first-child {
   cursor: default;
 }

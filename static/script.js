@@ -162,6 +162,7 @@ function eventEndDate(e) { return typeof e === 'string' ? '' : (e.endDate || '')
 function eventCategory(e) { return typeof e === 'string' ? '' : (e.category || ''); }
 function eventNotes(e) { return typeof e === 'string' ? '' : (e.notes || ''); }
 function eventRecurrence(e) { return typeof e === 'string' ? null : (e.recurrence || null); }
+function eventDone(e) { return typeof e === 'string' ? false : (e.done || false); }
 function getSearchQuery() {
   const el = document.getElementById('search');
   return el ? el.value.trim().toLowerCase() : '';
@@ -343,6 +344,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
       const eventElement = document.createElement('div');
       eventElement.classList.add('event');
       if (!isOriginal) eventElement.classList.add('event-recurrence');
+      if (eventDone(event)) eventElement.classList.add('event-done');
       if (isOriginal) {
         eventElement.draggable = true;
         eventElement.addEventListener('dragstart', (e) => {
@@ -394,6 +396,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
             const updatedEvent = { text: updatedText.trim(), time: updatedTime, endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
             if (updatedEndDate) updatedEvent.endDate = updatedEndDate;
             if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
+            if (events[baseDate][baseIndex].done) updatedEvent.done = true;
             events[baseDate][baseIndex] = updatedEvent;
             events[baseDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
           }
@@ -416,7 +419,20 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
         });
       }
 
+      const checkBtn = document.createElement('span');
+      checkBtn.classList.add('event-check');
+      checkBtn.textContent = eventDone(event) ? '✓' : '○';
+      if (isOriginal) {
+        checkBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
+          saveEvents();
+          generateCalendar();
+        });
+      }
+
       eventElement.appendChild(label);
+      eventElement.appendChild(checkBtn);
       eventElement.appendChild(deleteBtn);
       dayElement.appendChild(eventElement);
   });
