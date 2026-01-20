@@ -125,7 +125,133 @@ function generateWeek(currentDay, effectiveEvents) {
 }
 
 let currentDate = new Date();
+let viewMode = 'calendar';
+
+function editEvent(date, index) {
+  const event = events[date][index];
+  const updatedText = prompt("Edit event:", eventText(event));
+  if (updatedText === null) return;
+  if (updatedText.trim() === '') {
+    events[date].splice(index, 1);
+    if (events[date].length === 0) delete events[date];
+  } else {
+    const updatedEndDate = promptEndDate(date, eventEndDate(event));
+    if (updatedEndDate === null) return;
+    let updatedTime = '', updatedEndTime = '';
+    if (!updatedEndDate) {
+      const t = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
+      if (t === null) return;
+      updatedTime = t;
+      const et = updatedTime ? promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) : '';
+      if (et === null) return;
+      updatedEndTime = et;
+    }
+    const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
+    if (updatedCategory === null) return;
+    const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
+    if (updatedNotes === null) return;
+    const updatedRecurrence = promptRecurrence(eventRecurrence(event));
+    const updatedEvent = { text: updatedText.trim(), time: updatedTime, endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
+    if (updatedEndDate) updatedEvent.endDate = updatedEndDate;
+    if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
+    if (events[date][index].done) updatedEvent.done = true;
+    events[date][index] = updatedEvent;
+    events[date].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+  }
+  saveEvents();
+  generateCalendar();
+}
+
+function generateAgenda() {
+  calendar.innerHTML = '';
+  const allEntries = [];
+  for (const [date, dayEvents] of Object.entries(events)) {
+    for (let i = 0; i < dayEvents.length; i++) {
+      allEntries.push({ date, index: i, event: dayEvents[i] });
+    }
+  }
+  allEntries.sort((a, b) => {
+    const dc = a.date.localeCompare(b.date);
+    return dc !== 0 ? dc : normalizeTime(eventTime(a.event)).localeCompare(normalizeTime(eventTime(b.event)));
+  });
+  const query = getSearchQuery();
+  const visible = query
+    ? allEntries.filter(({ event: e }) =>
+        eventText(e).toLowerCase().includes(query) ||
+        eventCategory(e).toLowerCase().includes(query) ||
+        eventNotes(e).toLowerCase().includes(query))
+    : allEntries;
+  const todayStr = toDateStr(new Date());
+  let lastDate = '';
+  for (const { date, index, event } of visible) {
+    if (date !== lastDate) {
+      lastDate = date;
+      const dh = document.createElement('div');
+      dh.classList.add('agenda-date');
+      if (date === todayStr) dh.classList.add('agenda-today');
+      const d = new Date(date + 'T00:00:00');
+      dh.textContent = d.toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      calendar.appendChild(dh);
+    }
+    const row = document.createElement('div');
+    row.classList.add('agenda-row');
+    const t = eventTime(event);
+    const et = eventEndTime(event);
+    const timeSpan = document.createElement('span');
+    timeSpan.classList.add('agenda-time');
+    timeSpan.textContent = t ? (et ? t + '–' + et : t) : 'All day';
+    const titleSpan = document.createElement('span');
+    titleSpan.classList.add('agenda-title');
+    if (eventDone(event)) titleSpan.classList.add('agenda-done');
+    titleSpan.textContent = eventText(event) + (eventRecurrence(event) ? ' ↻' : '') + (eventEndDate(event) ? ' ↦' : '');
+    titleSpan.title = eventText(event) + (eventNotes(event) ? '\n' + eventNotes(event) : '');
+    const catHue = categoryHue(eventCategory(event));
+    if (catHue !== null) {
+      titleSpan.classList.add('agenda-cat');
+      titleSpan.style.setProperty('--cat-hue', catHue);
+    }
+    titleSpan.addEventListener('click', () => editEvent(date, index));
+    const checkBtn = document.createElement('span');
+    checkBtn.classList.add('event-check');
+    checkBtn.textContent = eventDone(event) ? '✓' : '○';
+    checkBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      events[date][index].done = !events[date][index].done;
+      saveEvents();
+      generateCalendar();
+    });
+    const deleteBtn = document.createElement('span');
+    deleteBtn.classList.add('event-delete', 'agenda-delete');
+    deleteBtn.textContent = '×';
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete "' + eventText(event) + '"?')) return;
+      events[date].splice(index, 1);
+      if (events[date].length === 0) delete events[date];
+      saveEvents();
+      generateCalendar();
+    });
+    row.appendChild(timeSpan);
+    row.appendChild(titleSpan);
+    row.appendChild(checkBtn);
+    row.appendChild(deleteBtn);
+    calendar.appendChild(row);
+  }
+  if (visible.length === 0) {
+    const empty = document.createElement('div');
+    empty.classList.add('agenda-empty');
+    empty.textContent = query ? 'No matching events.' : 'No events.';
+    calendar.appendChild(empty);
+  }
+  const sideLabel = document.getElementById('side-label');
+  sideLabel.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = 'Agenda';
+  sideLabel.appendChild(span);
+}
+
 function generateCalendar() {
+  if (viewMode === 'agenda') { generateAgenda(); return; }
   let lastSunday = new Date(currentDate);
   lastSunday.setDate(currentDate.getDate() - currentDate.getDay());
   const visibleStart = new Date(lastSunday);
@@ -374,37 +500,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
       if (isOriginal) {
         label.addEventListener('click', (e) => {
           e.stopPropagation();
-          const updatedText = prompt("Edit event:", eventText(event));
-          if (updatedText === null) return;
-          if (updatedText.trim() === '') {
-            events[baseDate].splice(baseIndex, 1);
-            if (events[baseDate].length === 0) delete events[baseDate];
-          } else {
-            const updatedEndDate = promptEndDate(baseDate, eventEndDate(event));
-            if (updatedEndDate === null) return;
-            let updatedTime = '', updatedEndTime = '';
-            if (!updatedEndDate) {
-              const t = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
-              if (t === null) return;
-              updatedTime = t;
-              const et = updatedTime ? promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) : '';
-              if (et === null) return;
-              updatedEndTime = et;
-            }
-            const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
-            if (updatedCategory === null) return;
-            const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
-            if (updatedNotes === null) return;
-            const updatedRecurrence = promptRecurrence(eventRecurrence(event));
-            const updatedEvent = { text: updatedText.trim(), time: updatedTime, endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
-            if (updatedEndDate) updatedEvent.endDate = updatedEndDate;
-            if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
-            if (events[baseDate][baseIndex].done) updatedEvent.done = true;
-            events[baseDate][baseIndex] = updatedEvent;
-            events[baseDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
-          }
-          saveEvents();
-          generateCalendar();
+          editEvent(baseDate, baseIndex);
         });
       }
 
@@ -554,6 +650,9 @@ document.addEventListener('keydown', (event) => {
     generateCalendar();
   } else if (event.key === 'n') {
     addEventForDate(toDateStr(new Date()));
+  } else if (event.key === 'l') {
+    viewMode = viewMode === 'agenda' ? 'calendar' : 'agenda';
+    generateCalendar();
   } else if (event.key === 'd') {
     toggleTheme();
   } else if (event.key === '?') {

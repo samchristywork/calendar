@@ -208,6 +208,66 @@ h1 {
   font-size: 1.6rem;
 }
 
+.agenda-date {
+  font-weight: bold;
+  padding: 0.5rem 0.5rem 0.2rem;
+  font-size: 0.9em;
+  border-bottom: 1px solid var(--day-border);
+  margin-top: 0.4rem;
+}
+
+.agenda-today {
+  border-left: 3px solid var(--today-border);
+  padding-left: calc(0.5rem - 3px);
+}
+
+.agenda-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.5rem;
+  border-bottom: 1px solid var(--day-border);
+  font-size: 0.9em;
+}
+
+.agenda-row:hover .event-delete {
+  opacity: 1;
+}
+
+.agenda-delete {
+  opacity: 0;
+}
+
+.agenda-time {
+  flex-shrink: 0;
+  width: 8rem;
+  opacity: 0.65;
+}
+
+.agenda-title {
+  flex: 1;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agenda-done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.agenda-cat {
+  background-color: hsla(var(--cat-hue), var(--event-cat-s), var(--event-cat-l), 0.5);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.agenda-empty {
+  padding: 2rem;
+  opacity: 0.5;
+}
+
 .toast {
   position: fixed;
   bottom: 1rem;
