@@ -317,10 +317,13 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
     const { baseDate, baseIndex } = data;
     if (baseDate === dateText) return;
     const event = events[baseDate][baseIndex];
-    events[baseDate].splice(baseIndex, 1);
-    if (events[baseDate].length === 0) delete events[baseDate];
+    const copying = e.ctrlKey;
+    if (!copying) {
+      events[baseDate].splice(baseIndex, 1);
+      if (events[baseDate].length === 0) delete events[baseDate];
+    }
     if (!events[dateText]) events[dateText] = [];
-    events[dateText].push(event);
+    events[dateText].push(copying ? { ...event } : event);
     events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
     saveEvents();
     generateCalendar();
