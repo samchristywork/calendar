@@ -164,10 +164,12 @@ function editEvent(date, index) {
 
 function generateAgenda() {
   calendar.innerHTML = '';
+  const visibleEnd = new Date(new Date().getFullYear() + 10, 11, 31);
+  const effectiveEvents = buildEffectiveEvents(new Date(2000, 0, 1), visibleEnd);
   const allEntries = [];
-  for (const [date, dayEvents] of Object.entries(events)) {
-    for (let i = 0; i < dayEvents.length; i++) {
-      allEntries.push({ date, index: i, event: dayEvents[i] });
+  for (const [date, dayEvents] of Object.entries(effectiveEvents)) {
+    for (const event of dayEvents) {
+      allEntries.push({ date, baseDate: event._baseDate, baseIndex: event._baseIndex, event });
     }
   }
   allEntries.sort((a, b) => {
@@ -183,7 +185,8 @@ function generateAgenda() {
     : allEntries;
   const todayStr = toDateStr(new Date());
   let lastDate = '';
-  for (const { date, index, event } of visible) {
+  for (const { date, baseDate, baseIndex, event } of visible) {
+    const isOriginal = baseDate === date;
     if (date !== lastDate) {
       lastDate = date;
       const dh = document.createElement('div');
@@ -210,27 +213,31 @@ function generateAgenda() {
       titleSpan.classList.add('agenda-cat');
       titleSpan.style.setProperty('--cat-hue', catHue);
     }
-    titleSpan.addEventListener('click', () => editEvent(date, index));
+    if (isOriginal) titleSpan.addEventListener('click', () => editEvent(baseDate, baseIndex));
     const checkBtn = document.createElement('span');
     checkBtn.classList.add('event-check');
     checkBtn.textContent = eventDone(event) ? '✓' : '○';
-    checkBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      events[date][index].done = !events[date][index].done;
-      saveEvents();
-      generateCalendar();
-    });
+    if (isOriginal) {
+      checkBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
+        saveEvents();
+        generateCalendar();
+      });
+    }
     const deleteBtn = document.createElement('span');
     deleteBtn.classList.add('event-delete', 'agenda-delete');
     deleteBtn.textContent = '×';
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (!confirm('Delete "' + eventText(event) + '"?')) return;
-      events[date].splice(index, 1);
-      if (events[date].length === 0) delete events[date];
-      saveEvents();
-      generateCalendar();
-    });
+    if (isOriginal) {
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!confirm('Delete "' + eventText(event) + '"?')) return;
+        events[baseDate].splice(baseIndex, 1);
+        if (events[baseDate].length === 0) delete events[baseDate];
+        saveEvents();
+        generateCalendar();
+      });
+    }
     row.appendChild(timeSpan);
     row.appendChild(titleSpan);
     row.appendChild(checkBtn);
