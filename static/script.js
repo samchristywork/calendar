@@ -151,6 +151,7 @@ function editEvent(date, index) {
     const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
     if (updatedNotes === null) return;
     const updatedRecurrence = promptRecurrence(eventRecurrence(event));
+    if (updatedRecurrence === null) return;
     const updatedEvent = { text: updatedText.trim(), time: updatedTime, endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
     if (updatedEndDate) updatedEvent.endDate = updatedEndDate;
     if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
@@ -332,7 +333,7 @@ function promptRecurrence(existing) {
     if (input === '' || freqs.includes(input)) { freq = input; break; }
     alert('Enter: daily, weekly, monthly, yearly, or leave blank.');
   }
-  if (!freq) return null;
+  if (!freq) return false;
   const dateRe = /^\d{4}-\d{2}-\d{2}$/;
   const defaultEnd = existing ? (existing.count ? existing.count + 'x' : existing.until ? existing.until : '') : '';
   let end = null;
