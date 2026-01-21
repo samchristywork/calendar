@@ -587,11 +587,11 @@ function exportIcal() {
         const end = endTimeVal
           ? (() => { const [eh, em] = endTimeVal.split(':'); return new Date(+year, +month - 1, +day, +eh, +em); })()
           : new Date(start.getTime() + 60 * 60 * 1000);
-        const fmt = d => d.getFullYear() +
-          String(d.getMonth() + 1).padStart(2, '0') +
-          String(d.getDate()).padStart(2, '0') + 'T' +
-          String(d.getHours()).padStart(2, '0') +
-          String(d.getMinutes()).padStart(2, '0') + '00';
+        const fmt = d => d.getUTCFullYear() +
+          String(d.getUTCMonth() + 1).padStart(2, '0') +
+          String(d.getUTCDate()).padStart(2, '0') + 'T' +
+          String(d.getUTCHours()).padStart(2, '0') +
+          String(d.getUTCMinutes()).padStart(2, '0') + '00Z';
         lines.push('DTSTART:' + fmt(start));
         lines.push('DTEND:' + fmt(end));
       } else {
