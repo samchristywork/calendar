@@ -481,6 +481,7 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
 
       const eventElement = document.createElement('div');
       eventElement.classList.add('event');
+      eventElement.addEventListener('click', (e) => e.stopPropagation());
       if (!isOriginal) eventElement.classList.add('event-recurrence');
       if (eventDone(event)) eventElement.classList.add('event-done');
       if (isOriginal) {
