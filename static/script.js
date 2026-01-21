@@ -454,8 +454,18 @@ function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
       events[baseDate].splice(baseIndex, 1);
       if (events[baseDate].length === 0) delete events[baseDate];
     }
+    const movedEvent = { ...event };
+    const oldEndDate = eventEndDate(event);
+    if (oldEndDate) {
+      const spanDays = Math.round(
+        (new Date(oldEndDate + 'T00:00:00') - new Date(baseDate + 'T00:00:00')) / 86400000
+      );
+      const newEnd = new Date(dateText + 'T00:00:00');
+      newEnd.setDate(newEnd.getDate() + spanDays);
+      movedEvent.endDate = toDateStr(newEnd);
+    }
     if (!events[dateText]) events[dateText] = [];
-    events[dateText].push(copying ? { ...event } : event);
+    events[dateText].push(movedEvent);
     events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
     saveEvents();
     generateCalendar();
