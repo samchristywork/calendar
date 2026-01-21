@@ -10,6 +10,7 @@ import (
 
 func eventsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
+		r.Body = http.MaxBytesReader(w, r.Body, 10<<20) // 10 MB limit
 		defer r.Body.Close()
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
