@@ -23,7 +23,7 @@ function toggleTheme() {
 })();
 
 const calendar = document.getElementById('calendar');
-let nWeeks = parseInt(localStorage.getItem('nWeeks'), 10) || 8;
+let nWeeks = Math.min(52, Math.max(1, parseInt(localStorage.getItem('nWeeks'), 10) || 8));
 let events = {};
 fetch('events.json')
   .then(response => response.json())
