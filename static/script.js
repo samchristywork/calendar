@@ -111,10 +111,7 @@ function generateWeek(currentDay, effectiveEvents) {
   weekElement.style.height = 'calc((100vh - 2rem) / ' + nWeeks + ')';
 
   for (let i = 0; i < 7; i++) {
-    const dateText = "" +
-      currentDay.getFullYear() + "-" +
-      (currentDay.getMonth() + 1).toString().padStart(2, '0') + "-" +
-      currentDay.getDate().toString().padStart(2, '0');
+    const dateText = toDateStr(currentDay);
     const isToday = (currentDay.toDateString() === new Date().toDateString());
     const dayElement = createDayElement(dateText, hash(currentDay.getMonth()), isToday, i, effectiveEvents[dateText] || []);
     currentDay.setDate(currentDay.getDate() + 1);
