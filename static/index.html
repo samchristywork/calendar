@@ -10,15 +10,7 @@
   <body>
     <div id="side-label" class="side-label"></div>
     <input type="text" id="search" placeholder="Search events..." oninput="generateCalendar()">
-    <div class="header">
-      <div>Sunday</div>
-      <div>Monday</div>
-      <div>Tuesday</div>
-      <div>Wednesday</div>
-      <div>Thursday</div>
-      <div>Friday</div>
-      <div>Saturday</div>
-    </div>
+    <div id="header" class="header"></div>
     <div id="calendar" class="calendar"></div>
     <input type="file" id="ical-import" accept=".ics" style="display:none">
     <div class="instructions" onclick="toggleInstructions()">
@@ -38,6 +30,7 @@
       <div><strong>e</strong>: Export events as .ics</div>
       <div><strong>i</strong>: Import events from .ics</div>
       <div><strong>g</strong>: Go to date</div>
+      <div><strong>s</strong>: Toggle week start (Sun/Mon)</div>
       <div><strong>/</strong>: Focus search box</div>
       <p>Click on a date to add an event</p>
       <p>Ctrl+drag an event to copy it</p>

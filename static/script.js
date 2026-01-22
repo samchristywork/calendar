@@ -24,6 +24,7 @@ function toggleTheme() {
 
 const calendar = document.getElementById('calendar');
 let nWeeks = Math.min(52, Math.max(1, parseInt(localStorage.getItem('nWeeks'), 10) || 8));
+let weekStart = parseInt(localStorage.getItem('weekStart'), 10) === 1 ? 1 : 0;
 let events = {};
 fetch('events.json')
   .then(response => response.json())
@@ -113,7 +114,8 @@ function generateWeek(currentDay, effectiveEvents) {
   for (let i = 0; i < 7; i++) {
     const dateText = toDateStr(currentDay);
     const isToday = (currentDay.toDateString() === new Date().toDateString());
-    const dayElement = createDayElement(dateText, hash(currentDay.getMonth()), isToday, i, effectiveEvents[dateText] || []);
+    const isWeekend = currentDay.getDay() === 0 || currentDay.getDay() === 6;
+    const dayElement = createDayElement(dateText, hash(currentDay.getMonth()), isToday, isWeekend, effectiveEvents[dateText] || []);
     currentDay.setDate(currentDay.getDate() + 1);
     weekElement.appendChild(dayElement);
   }
@@ -256,14 +258,23 @@ function generateAgenda() {
 }
 
 function generateCalendar() {
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const header = document.getElementById('header');
+  header.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const div = document.createElement('div');
+    div.textContent = dayNames[(weekStart + i) % 7];
+    header.appendChild(div);
+  }
   if (viewMode === 'agenda') { generateAgenda(); return; }
-  let lastSunday = new Date(currentDate);
-  lastSunday.setDate(currentDate.getDate() - currentDate.getDay());
-  const visibleStart = new Date(lastSunday);
-  const visibleEnd = new Date(lastSunday);
+  const daysBack = weekStart === 1 ? (currentDate.getDay() + 6) % 7 : currentDate.getDay();
+  let weekStartDay = new Date(currentDate);
+  weekStartDay.setDate(currentDate.getDate() - daysBack);
+  const visibleStart = new Date(weekStartDay);
+  const visibleEnd = new Date(weekStartDay);
   visibleEnd.setDate(visibleEnd.getDate() + nWeeks * 7 - 1);
   const effectiveEvents = buildEffectiveEvents(visibleStart, visibleEnd);
-  let currentDay = new Date(lastSunday);
+  let currentDay = new Date(weekStartDay);
   calendar.innerHTML = '';
 
   for (let i = 0; i < nWeeks; i++) {
@@ -274,8 +285,8 @@ function generateCalendar() {
   sideLabel.innerHTML = '';
   const seen = new Set();
   for (let i = 0; i < nWeeks * 7; i++) {
-    const d = new Date(lastSunday);
-    d.setDate(lastSunday.getDate() + i);
+    const d = new Date(weekStartDay);
+    d.setDate(weekStartDay.getDate() + i);
     const key = d.getFullYear() + '-' + d.getMonth();
     if (!seen.has(key)) {
       seen.add(key);
@@ -420,11 +431,11 @@ function addEventForDate(dateText) {
   generateCalendar();
 }
 
-function createDayElement(dateText, hue, isToday, dayOfWeek, displayEvents) {
+function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
   const dayElement = document.createElement('div');
   dayElement.classList.add('day');
   dayElement.style.setProperty('--hue', hue);
-  if (dayOfWeek === 0 || dayOfWeek === 6) dayElement.classList.add('weekend');
+  if (isWeekend) dayElement.classList.add('weekend');
   if (isToday) dayElement.classList.add('today');
 
   const dateTextElement = document.createElement('div');
@@ -780,6 +791,11 @@ document.addEventListener('keydown', (event) => {
     exportIcal();
   } else if (event.key === 'i') {
     document.getElementById('ical-import').click();
+  } else if (event.key === 's') {
+    weekStart = weekStart === 0 ? 1 : 0;
+    localStorage.setItem('weekStart', weekStart);
+    showToast('Week starts on ' + (weekStart === 1 ? 'Monday' : 'Sunday'));
+    generateCalendar();
   } else if (event.key === 'g') {
     const raw = prompt('Go to date (YYYY-MM-DD):', toDateStr(currentDate));
     if (!raw) return;
