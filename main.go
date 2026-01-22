@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -59,14 +60,22 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	defaultPort := "8080"
+	if p := os.Getenv("PORT"); p != "" {
+		defaultPort = p
+	}
+	port := flag.String("port", defaultPort, "port to listen on")
+	flag.Parse()
+
 	if err := os.MkdirAll("data", 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "Could not create data directory: %v\n", err)
 		os.Exit(1)
 	}
 	http.Handle("/", http.FileServer(http.Dir("static")))
 	http.Handle("/events.json", http.HandlerFunc(eventsHandler))
-	fmt.Println("Serving on http://localhost:8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	addr := ":" + *port
+	fmt.Printf("Serving on http://localhost:%s\n", *port)
+	if err := http.ListenAndServe(addr, nil); err != nil {
 		fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		os.Exit(1)
 	}
