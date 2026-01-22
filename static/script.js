@@ -780,6 +780,14 @@ document.addEventListener('keydown', (event) => {
     exportIcal();
   } else if (event.key === 'i') {
     document.getElementById('ical-import').click();
+  } else if (event.key === 'g') {
+    const raw = prompt('Go to date (YYYY-MM-DD):', toDateStr(currentDate));
+    if (!raw) return;
+    const d = new Date(raw.trim() + 'T00:00:00');
+    if (isNaN(d.getTime())) { alert('Enter a date in YYYY-MM-DD format.'); return; }
+    currentDate = d;
+    viewMode = 'calendar';
+    generateCalendar();
   } else if (event.key === 'Escape') {
     const instructions = document.querySelector('.instructions');
     if (!instructions.classList.contains('instructions-hidden')) {
