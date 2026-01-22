@@ -386,3 +386,69 @@ h1 {
 .day-view-current-hour {
   background-color: hsla(0, 0%, 50%, 0.08);
 }
+
+@media print {
+  /* Force light-mode variables so output is always readable */
+  :root {
+    --day-s: 100%;
+    --day-l: 90%;
+    --weekend-s: 90%;
+    --weekend-l: 85%;
+    --today-border: rgba(0, 0, 0, 0.5);
+    --header-bg: #f0f0f0;
+    --body-bg: #fff;
+    --text-color: #000;
+    --event-bg: rgba(255, 255, 255, 0.8);
+    --event-cat-l: 80%;
+    --event-cat-s: 70%;
+    --day-border: rgba(0, 0, 0, 0.1);
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide interactive chrome */
+  #search,
+  .side-label,
+  .instructions,
+  .toast {
+    display: none !important;
+  }
+
+  /* Remove side-label offset */
+  .header,
+  .calendar {
+    margin-left: 0;
+  }
+
+  /* Let week rows size to their content */
+  .row {
+    height: auto !important;
+  }
+
+  /* Show all event content instead of scrolling */
+  .day {
+    overflow: visible;
+    min-height: 4rem;
+  }
+
+  /* Keep each week on the same page if possible */
+  .row {
+    break-inside: avoid;
+  }
+
+  /* Unfurl day/agenda scroll containers */
+  .day-view {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide edit/delete controls - not useful on paper */
+  .event-delete,
+  .event-check,
+  .agenda-delete {
+    display: none !important;
+  }
+}
