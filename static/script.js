@@ -631,6 +631,108 @@ function exportIcal() {
   URL.revokeObjectURL(url);
 }
 
+function icalUnescape(s) {
+  return s.replace(/\\n/gi, '\n').replace(/\\;/g, ';').replace(/\\,/g, ',').replace(/\\\\/g, '\\');
+}
+
+function parseIcalDateTime(value) {
+  if (/^\d{8}$/.test(value)) {
+    return { date: value.slice(0, 4) + '-' + value.slice(4, 6) + '-' + value.slice(6, 8), time: '' };
+  }
+  const m = value.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/);
+  if (!m) return { date: '', time: '' };
+  const [, y, mo, d, h, mi] = m;
+  if (value.endsWith('Z')) {
+    const utc = new Date(y + '-' + mo + '-' + d + 'T' + h + ':' + mi + ':00Z');
+    return {
+      date: toDateStr(utc),
+      time: String(utc.getHours()).padStart(2, '0') + ':' + String(utc.getMinutes()).padStart(2, '0')
+    };
+  }
+  return { date: y + '-' + mo + '-' + d, time: h + ':' + mi };
+}
+
+function parseIcalRrule(rrule) {
+  const parts = {};
+  for (const part of rrule.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq !== -1) parts[part.slice(0, eq)] = part.slice(eq + 1);
+  }
+  const freq = parts['FREQ'];
+  if (!['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'].includes(freq)) return null;
+  const result = { freq };
+  if (parts['COUNT']) result.count = parseInt(parts['COUNT'], 10);
+  else if (parts['UNTIL']) result.until = parts['UNTIL'].slice(0, 8);
+  return result;
+}
+
+function importIcal(text) {
+  const unfolded = text.replace(/\r?\n[ \t]/g, '');
+  const lines = unfolded.split(/\r?\n/);
+  let inEvent = false;
+  const props = {};
+  let imported = 0;
+  for (const line of lines) {
+    if (line === 'BEGIN:VEVENT') {
+      inEvent = true;
+      Object.keys(props).forEach(k => delete props[k]);
+    } else if (line === 'END:VEVENT') {
+      inEvent = false;
+      const summary = props['SUMMARY'];
+      const dtstart = props['DTSTART'];
+      if (summary && dtstart) {
+        const text = icalUnescape(summary).trim();
+        const { date: startDate, time: startTime } = parseIcalDateTime(dtstart);
+        if (text && startDate) {
+          let endDate = '', endTime = '';
+          const dtend = props['DTEND'];
+          if (dtend) {
+            const { date: ed, time: et } = parseIcalDateTime(dtend);
+            if (!startTime && ed && ed !== startDate) {
+              const endD = new Date(ed + 'T00:00:00');
+              endD.setDate(endD.getDate() - 1);
+              const adj = toDateStr(endD);
+              if (adj > startDate) endDate = adj;
+            } else if (startTime && et) {
+              endTime = et;
+            }
+          }
+          const notes = props['DESCRIPTION'] ? icalUnescape(props['DESCRIPTION']).trim() : '';
+          const cat = props['CATEGORIES'] ? icalUnescape(props['CATEGORIES']).split(',')[0].trim() : '';
+          const recurrence = props['RRULE'] ? parseIcalRrule(props['RRULE']) : null;
+          const newEvent = { text, time: startTime, endTime, category: cat, notes };
+          if (endDate) newEvent.endDate = endDate;
+          if (recurrence) newEvent.recurrence = recurrence;
+          if (!events[startDate]) events[startDate] = [];
+          events[startDate].push(newEvent);
+          events[startDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+          imported++;
+        }
+      }
+    } else if (inEvent) {
+      const colonIdx = line.indexOf(':');
+      if (colonIdx === -1) continue;
+      const propName = line.slice(0, colonIdx).split(';')[0].toUpperCase();
+      props[propName] = line.slice(colonIdx + 1);
+    }
+  }
+  return imported;
+}
+
+document.getElementById('ical-import').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const count = importIcal(ev.target.result);
+    e.target.value = '';
+    saveEvents();
+    generateCalendar();
+    showToast('Imported ' + count + ' event' + (count !== 1 ? 's' : ''));
+  };
+  reader.readAsText(file);
+});
+
 document.addEventListener('keydown', (event) => {
   if (document.activeElement === document.getElementById('search')) return;
   if (event.key === '/') {
@@ -676,6 +778,8 @@ document.addEventListener('keydown', (event) => {
     toggleInstructions();
   } else if (event.key === 'e') {
     exportIcal();
+  } else if (event.key === 'i') {
+    document.getElementById('ical-import').click();
   } else if (event.key === 'Escape') {
     const instructions = document.querySelector('.instructions');
     if (!instructions.classList.contains('instructions-hidden')) {
