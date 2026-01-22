@@ -50,7 +50,13 @@ function toDateStr(d) {
 function buildEffectiveEvents(visibleStart, visibleEnd) {
   const effective = {};
   for (const [date, dayEvents] of Object.entries(events)) {
-    effective[date] = dayEvents.map((e, idx) => ({ ...e, _baseDate: date, _baseIndex: idx }));
+    effective[date] = [];
+    for (let idx = 0; idx < dayEvents.length; idx++) {
+      const e = dayEvents[idx];
+      const exc = e.exceptions && Object.prototype.hasOwnProperty.call(e.exceptions, date) ? e.exceptions[date] : undefined;
+      if (exc === null) continue;
+      effective[date].push(exc ? { ...exc, _baseDate: date, _baseIndex: idx } : { ...e, _baseDate: date, _baseIndex: idx });
+    }
   }
   for (const [date, dayEvents] of Object.entries(events)) {
     const [y, m, d] = date.split('-').map(Number);
@@ -76,8 +82,12 @@ function buildEffectiveEvents(visibleStart, visibleEnd) {
         if (current > visibleEnd) break;
         if (current >= visibleStart) {
           const dateStr = toDateStr(current);
+          const exc = event.exceptions && Object.prototype.hasOwnProperty.call(event.exceptions, dateStr) ? event.exceptions[dateStr] : undefined;
+          if (exc === null) continue;
           if (!effective[dateStr]) effective[dateStr] = [];
-          effective[dateStr].push({ ...event, _baseDate: date, _baseIndex: idx });
+          effective[dateStr].push(exc
+            ? { ...exc, _baseDate: date, _baseIndex: idx }
+            : { ...event, _baseDate: date, _baseIndex: idx });
         }
       }
     }
@@ -126,38 +136,91 @@ function generateWeek(currentDay, effectiveEvents) {
 let currentDate = new Date();
 let viewMode = 'calendar';
 
-function editEvent(date, index) {
-  const event = events[date][index];
-  const updatedText = prompt("Edit event:", eventText(event));
+function editEvent(date, index, occurrenceDate) {
+  const base = events[date][index];
+  const isInstance = occurrenceDate && occurrenceDate !== date && eventRecurrence(base);
+
+  let scope = 'all';
+  if (isInstance) {
+    const answer = prompt(
+      'Edit recurring event:\n  1 - Just this occurrence (' + occurrenceDate + ')\n  2 - This and future occurrences\n  3 - All occurrences',
+      '1'
+    );
+    if (answer === null) return;
+    const t = answer.trim();
+    if (t === '2') scope = 'future';
+    else if (t === '3') scope = 'all';
+    else scope = 'one';
+  }
+
+  const src = (scope === 'one' && base.exceptions && base.exceptions[occurrenceDate])
+    ? base.exceptions[occurrenceDate] : base;
+
+  const updatedText = prompt("Edit event:", eventText(src));
   if (updatedText === null) return;
+
   if (updatedText.trim() === '') {
-    events[date].splice(index, 1);
-    if (events[date].length === 0) delete events[date];
-  } else {
-    const updatedEndDate = promptEndDate(date, eventEndDate(event));
-    if (updatedEndDate === null) return;
-    let updatedTime = '', updatedEndTime = '';
-    if (!updatedEndDate) {
-      const t = promptTime("Time (HH:MM, or leave blank):", eventTime(event));
-      if (t === null) return;
-      updatedTime = t;
-      const et = updatedTime ? promptTime("End time (HH:MM, or leave blank):", eventEndTime(event)) : '';
-      if (et === null) return;
-      updatedEndTime = et;
+    if (scope === 'one') {
+      if (!events[date][index].exceptions) events[date][index].exceptions = {};
+      events[date][index].exceptions[occurrenceDate] = null;
+    } else if (scope === 'future') {
+      const dayBefore = new Date(occurrenceDate + 'T00:00:00');
+      dayBefore.setDate(dayBefore.getDate() - 1);
+      const untilStr = toDateStr(dayBefore).replace(/-/g, '');
+      if (base.recurrence) events[date][index].recurrence = { freq: base.recurrence.freq, until: untilStr };
+    } else {
+      events[date].splice(index, 1);
+      if (events[date].length === 0) delete events[date];
     }
-    const updatedCategory = prompt("Category (or leave blank):", eventCategory(event));
-    if (updatedCategory === null) return;
-    const updatedNotes = prompt("Notes (or leave blank):", eventNotes(event));
-    if (updatedNotes === null) return;
-    const updatedRecurrence = promptRecurrence(eventRecurrence(event));
+    saveEvents();
+    generateCalendar();
+    return;
+  }
+
+  const startDate = (scope === 'one' || scope === 'future') ? occurrenceDate : date;
+  const updatedEndDate = promptEndDate(startDate, eventEndDate(src));
+  if (updatedEndDate === null) return;
+  let updatedTime = '', updatedEndTime = '';
+  if (!updatedEndDate) {
+    const t = promptTime("Time (HH:MM, or leave blank):", eventTime(src));
+    if (t === null) return;
+    updatedTime = t;
+    const et = updatedTime ? promptTime("End time (HH:MM, or leave blank):", eventEndTime(src)) : '';
+    if (et === null) return;
+    updatedEndTime = et;
+  }
+  const updatedCategory = prompt("Category (or leave blank):", eventCategory(src));
+  if (updatedCategory === null) return;
+  const updatedNotes = prompt("Notes (or leave blank):", eventNotes(src));
+  if (updatedNotes === null) return;
+
+  const updatedEvent = { text: updatedText.trim(), time: updatedTime, endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
+  if (updatedEndDate) updatedEvent.endDate = updatedEndDate;
+
+  if (scope === 'all') {
+    const updatedRecurrence = promptRecurrence(eventRecurrence(base));
     if (updatedRecurrence === null) return;
-    const updatedEvent = { text: updatedText.trim(), time: updatedTime, endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
-    if (updatedEndDate) updatedEvent.endDate = updatedEndDate;
     if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
-    if (events[date][index].done) updatedEvent.done = true;
+    if (base.exceptions) updatedEvent.exceptions = base.exceptions;
+    if (base.done) updatedEvent.done = true;
     events[date][index] = updatedEvent;
     events[date].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+  } else if (scope === 'one') {
+    if (!events[date][index].exceptions) events[date][index].exceptions = {};
+    events[date][index].exceptions[occurrenceDate] = updatedEvent;
+  } else if (scope === 'future') {
+    const dayBefore = new Date(occurrenceDate + 'T00:00:00');
+    dayBefore.setDate(dayBefore.getDate() - 1);
+    const untilStr = toDateStr(dayBefore).replace(/-/g, '');
+    if (base.recurrence) events[date][index].recurrence = { freq: base.recurrence.freq, until: untilStr };
+    const updatedRecurrence = promptRecurrence(eventRecurrence(base));
+    if (updatedRecurrence === null) return;
+    if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
+    if (!events[occurrenceDate]) events[occurrenceDate] = [];
+    events[occurrenceDate].push(updatedEvent);
+    events[occurrenceDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
   }
+
   saveEvents();
   generateCalendar();
 }
@@ -213,7 +276,7 @@ function generateAgenda() {
       titleSpan.classList.add('agenda-cat');
       titleSpan.style.setProperty('--cat-hue', catHue);
     }
-    if (isOriginal) titleSpan.addEventListener('click', () => editEvent(baseDate, baseIndex));
+    titleSpan.addEventListener('click', () => editEvent(baseDate, baseIndex, date));
     const checkBtn = document.createElement('span');
     checkBtn.classList.add('event-check');
     checkBtn.textContent = eventDone(event) ? '✓' : '○';
@@ -274,7 +337,7 @@ function createDayViewEvent(event, dateStr) {
   const timePrefix = t ? (et ? t + '-' + et : t) + ' ' : '';
   label.textContent = timePrefix + eventText(event) + (eventRecurrence(event) ? ' ↻' : '') + (eventEndDate(event) ? ' ↦' : '');
   label.title = label.textContent + (eventNotes(event) ? '\n' + eventNotes(event) : '');
-  if (isOriginal) label.addEventListener('click', (e) => { e.stopPropagation(); editEvent(baseDate, baseIndex); });
+  label.addEventListener('click', (e) => { e.stopPropagation(); editEvent(baseDate, baseIndex, dateStr); });
 
   const checkBtn = document.createElement('span');
   checkBtn.classList.add('event-check');
@@ -642,12 +705,10 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
       const spanSuffix = (ed && isOriginal) ? ' ↦' : '';
       label.textContent = spanPrefix + timePrefix + eventText(event) + recurSuffix + spanSuffix;
       label.title = label.textContent + (eventNotes(event) ? '\n' + eventNotes(event) : '');
-      if (isOriginal) {
-        label.addEventListener('click', (e) => {
-          e.stopPropagation();
-          editEvent(baseDate, baseIndex);
-        });
-      }
+      label.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editEvent(baseDate, baseIndex, dateText);
+      });
 
       const deleteBtn = document.createElement('span');
       deleteBtn.classList.add('event-delete');

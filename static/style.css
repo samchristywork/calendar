@@ -114,7 +114,7 @@ body {
 }
 
 .event-recurrence span:first-child {
-  cursor: default;
+  cursor: pointer;
 }
 
 .drag-over {
