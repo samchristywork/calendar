@@ -345,3 +345,44 @@ h1 {
 :root[data-theme="dark"] #search {
   border-color: rgba(255, 255, 255, 0.2);
 }
+
+.header-day {
+  grid-template-columns: 1fr;
+}
+
+.day-view {
+  overflow-y: auto;
+  height: calc(100vh - 2rem);
+}
+
+.day-view-row {
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  min-height: 2.5rem;
+  border-bottom: 1px solid var(--day-border);
+  cursor: pointer;
+}
+
+.day-view-row:hover {
+  background-color: hsla(0, 0%, 50%, 0.05);
+}
+
+.day-view-time-label {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75em;
+  opacity: 0.6;
+  border-right: 1px solid var(--day-border);
+  user-select: none;
+}
+
+.day-view-events-cell {
+  padding: 0.15rem 0.4rem;
+}
+
+.day-view-allday-row {
+  background-color: hsla(0, 0%, 50%, 0.04);
+}
+
+.day-view-current-hour {
+  background-color: hsla(0, 0%, 50%, 0.08);
+}

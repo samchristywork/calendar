@@ -257,10 +257,127 @@ function generateAgenda() {
   sideLabel.appendChild(span);
 }
 
+function createDayViewEvent(event, dateStr) {
+  const el = document.createElement('div');
+  el.classList.add('event');
+  el.addEventListener('click', (e) => e.stopPropagation());
+  if (eventDone(event)) el.classList.add('event-done');
+  const isOriginal = event._baseDate === dateStr;
+  if (!isOriginal) el.classList.add('event-recurrence');
+  const catHue = categoryHue(eventCategory(event));
+  if (catHue !== null) { el.classList.add('event-cat'); el.style.setProperty('--cat-hue', catHue); }
+  const baseDate = event._baseDate;
+  const baseIndex = event._baseIndex;
+
+  const label = document.createElement('span');
+  const t = eventTime(event), et = eventEndTime(event);
+  const timePrefix = t ? (et ? t + '-' + et : t) + ' ' : '';
+  label.textContent = timePrefix + eventText(event) + (eventRecurrence(event) ? ' ↻' : '') + (eventEndDate(event) ? ' ↦' : '');
+  label.title = label.textContent + (eventNotes(event) ? '\n' + eventNotes(event) : '');
+  if (isOriginal) label.addEventListener('click', (e) => { e.stopPropagation(); editEvent(baseDate, baseIndex); });
+
+  const checkBtn = document.createElement('span');
+  checkBtn.classList.add('event-check');
+  checkBtn.textContent = eventDone(event) ? '✓' : '○';
+  if (isOriginal) {
+    checkBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
+      saveEvents(); generateCalendar();
+    });
+  }
+
+  const deleteBtn = document.createElement('span');
+  deleteBtn.classList.add('event-delete');
+  deleteBtn.textContent = '×';
+  if (isOriginal) {
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!confirm('Delete "' + eventText(event) + '"?')) return;
+      events[baseDate].splice(baseIndex, 1);
+      if (events[baseDate].length === 0) delete events[baseDate];
+      saveEvents(); generateCalendar();
+    });
+  }
+
+  el.appendChild(label); el.appendChild(checkBtn); el.appendChild(deleteBtn);
+  return el;
+}
+
+function generateDayView() {
+  calendar.innerHTML = '';
+  const dateStr = toDateStr(currentDate);
+  const startOfDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
+  const endOfDay = new Date(startOfDay);
+  endOfDay.setDate(endOfDay.getDate() + 1);
+  const effectiveEvents = buildEffectiveEvents(startOfDay, endOfDay);
+  const dayEvents = effectiveEvents[dateStr] || [];
+  const isToday = dateStr === toDateStr(new Date());
+  const currentHour = new Date().getHours();
+
+  const grid = document.createElement('div');
+  grid.classList.add('day-view');
+
+  const allDayEvents = dayEvents.filter(e => !eventTime(e));
+  if (allDayEvents.length > 0) {
+    const row = document.createElement('div');
+    row.classList.add('day-view-row', 'day-view-allday-row');
+    row.addEventListener('click', () => addEventForDate(dateStr));
+    const label = document.createElement('div');
+    label.classList.add('day-view-time-label');
+    label.textContent = 'All day';
+    const cell = document.createElement('div');
+    cell.classList.add('day-view-events-cell');
+    allDayEvents.forEach(ev => cell.appendChild(createDayViewEvent(ev, dateStr)));
+    row.appendChild(label); row.appendChild(cell);
+    grid.appendChild(row);
+  }
+
+  for (let h = 0; h < 24; h++) {
+    const row = document.createElement('div');
+    row.classList.add('day-view-row');
+    if (isToday && h === currentHour) row.classList.add('day-view-current-hour');
+    row.addEventListener('click', () => addEventForDate(dateStr));
+
+    const label = document.createElement('div');
+    label.classList.add('day-view-time-label');
+    label.textContent = String(h).padStart(2, '0') + ':00';
+
+    const cell = document.createElement('div');
+    cell.classList.add('day-view-events-cell');
+    dayEvents.filter(e => {
+      const t = eventTime(e);
+      return t && parseInt(t.split(':')[0], 10) === h;
+    }).forEach(ev => cell.appendChild(createDayViewEvent(ev, dateStr)));
+
+    row.appendChild(label); row.appendChild(cell);
+    grid.appendChild(row);
+  }
+
+  calendar.appendChild(grid);
+
+  const sideLabel = document.getElementById('side-label');
+  sideLabel.innerHTML = '';
+  const span = document.createElement('span');
+  const d = new Date(dateStr + 'T00:00:00');
+  span.textContent = d.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+  sideLabel.appendChild(span);
+}
+
 function generateCalendar() {
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const header = document.getElementById('header');
   header.innerHTML = '';
+  if (viewMode === 'day') {
+    header.classList.add('header-day');
+    const div = document.createElement('div');
+    const d = new Date(toDateStr(currentDate) + 'T00:00:00');
+    div.textContent = d.toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    header.appendChild(div);
+    generateDayView();
+    return;
+  }
+  header.classList.remove('header-day');
   for (let i = 0; i < 7; i++) {
     const div = document.createElement('div');
     div.textContent = dayNames[(weekStart + i) % 7];
@@ -752,10 +869,10 @@ document.addEventListener('keydown', (event) => {
     return;
   }
   if (event.key === 'ArrowUp') {
-    currentDate.setDate(currentDate.getDate() - 7);
+    currentDate.setDate(currentDate.getDate() - (viewMode === 'day' ? 1 : 7));
     generateCalendar();
   } else if (event.key === 'ArrowDown') {
-    currentDate.setDate(currentDate.getDate() + 7);
+    currentDate.setDate(currentDate.getDate() + (viewMode === 'day' ? 1 : 7));
     generateCalendar();
   } else if (event.key === 'w') {
     nWeeks = 1;
@@ -784,6 +901,9 @@ document.addEventListener('keydown', (event) => {
     viewMode = viewMode === 'agenda' ? 'calendar' : 'agenda';
     generateCalendar();
   } else if (event.key === 'd') {
+    viewMode = viewMode === 'day' ? 'calendar' : 'day';
+    generateCalendar();
+  } else if (event.key === 'T') {
     toggleTheme();
   } else if (event.key === '?') {
     toggleInstructions();
@@ -814,6 +934,7 @@ document.addEventListener('keydown', (event) => {
 
 let wheelCooldown = null;
 document.addEventListener('wheel', (e) => {
+  if (e.target.closest('.day-view')) return;
   e.preventDefault();
   if (wheelCooldown) return;
   currentDate.setDate(currentDate.getDate() + (e.deltaY > 0 ? 7 : -7));
