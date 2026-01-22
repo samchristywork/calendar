@@ -847,6 +847,45 @@ function importIcal(text) {
   return imported;
 }
 
+function backupEvents() {
+  const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'events.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('json-restore').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    let data;
+    try { data = JSON.parse(ev.target.result); } catch {
+      showToast('Invalid JSON file', true);
+      e.target.value = '';
+      return;
+    }
+    if (typeof data !== 'object' || Array.isArray(data) || data === null) {
+      showToast('Invalid backup format', true);
+      e.target.value = '';
+      return;
+    }
+    if (!confirm('Replace all current events with the backup? This cannot be undone.')) {
+      e.target.value = '';
+      return;
+    }
+    events = data;
+    e.target.value = '';
+    saveEvents();
+    generateCalendar();
+    showToast('Events restored from backup');
+  };
+  reader.readAsText(file);
+});
+
 document.getElementById('ical-import').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -907,6 +946,10 @@ document.addEventListener('keydown', (event) => {
     toggleTheme();
   } else if (event.key === '?') {
     toggleInstructions();
+  } else if (event.key === 'b') {
+    backupEvents();
+  } else if (event.key === 'r') {
+    document.getElementById('json-restore').click();
   } else if (event.key === 'e') {
     exportIcal();
   } else if (event.key === 'i') {

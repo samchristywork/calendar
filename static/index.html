@@ -13,6 +13,7 @@
     <div id="header" class="header"></div>
     <div id="calendar" class="calendar"></div>
     <input type="file" id="ical-import" accept=".ics" style="display:none">
+    <input type="file" id="json-restore" accept=".json" style="display:none">
     <div class="instructions" onclick="toggleInstructions()">
       <span class="instructions-close">×</span>
       <h1>Instructions:</h1>
@@ -28,6 +29,8 @@
       <div><strong>l</strong>: Toggle agenda/calendar view</div>
       <div><strong>T</strong>: Toggle dark/light mode</div>
       <div><strong>?</strong>: Show/hide instructions</div>
+      <div><strong>b</strong>: Backup events to JSON</div>
+      <div><strong>r</strong>: Restore events from JSON backup</div>
       <div><strong>e</strong>: Export events as .ics</div>
       <div><strong>i</strong>: Import events from .ics</div>
       <div><strong>g</strong>: Go to date</div>
