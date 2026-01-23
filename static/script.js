@@ -136,6 +136,24 @@ function generateWeek(currentDay, effectiveEvents) {
 let currentDate = new Date();
 let viewMode = 'calendar';
 
+(function applyHash() {
+  const hash = window.location.hash.slice(1);
+  if (!hash) return;
+  const [datePart, modePart] = hash.split(',');
+  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
+  if (datePart && dateRe.test(datePart)) {
+    const d = new Date(datePart + 'T00:00:00');
+    if (!isNaN(d.getTime())) currentDate = d;
+  }
+  if (modePart === 'agenda' || modePart === 'day') viewMode = modePart;
+})();
+
+function updateHash() {
+  const parts = [toDateStr(currentDate)];
+  if (viewMode !== 'calendar') parts.push(viewMode);
+  history.replaceState(null, '', '#' + parts.join(','));
+}
+
 function editEvent(date, index, occurrenceDate) {
   const base = events[date][index];
   const isInstance = occurrenceDate && occurrenceDate !== date && eventRecurrence(base);
@@ -428,6 +446,7 @@ function generateDayView() {
 }
 
 function generateCalendar() {
+  updateHash();
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const header = document.getElementById('header');
   header.innerHTML = '';
