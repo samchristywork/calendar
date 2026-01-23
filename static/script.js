@@ -1130,6 +1130,14 @@ function importIcal(text) {
   let inEvent = false;
   const props = {};
   let imported = 0;
+
+  const seenKeys = new Set();
+  for (const [date, dayEvents] of Object.entries(events)) {
+    for (const ev of dayEvents) {
+      seenKeys.add(date + '\x00' + eventText(ev) + '\x00' + normalizeTime(eventTime(ev)));
+    }
+  }
+
   for (const line of lines) {
     if (line === 'BEGIN:VEVENT') {
       inEvent = true;
@@ -1142,6 +1150,9 @@ function importIcal(text) {
         const text = icalUnescape(summary).trim();
         const { date: startDate, time: startTime } = parseIcalDateTime(dtstart);
         if (text && startDate) {
+          const key = startDate + '\x00' + text + '\x00' + normalizeTime(startTime);
+          if (seenKeys.has(key)) continue;
+          seenKeys.add(key);
           let endDate = '', endTime = '';
           const dtend = props['DTEND'];
           if (dtend) {
