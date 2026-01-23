@@ -271,10 +271,11 @@ function generateAgenda() {
       titleSpan.style.setProperty('--cat-hue', catHue);
     }
     titleSpan.addEventListener('click', () => editEvent(baseDate, baseIndex, date));
-    const checkBtn = document.createElement('span');
-    checkBtn.classList.add('event-check');
-    checkBtn.textContent = eventDone(event) ? '✓' : '○';
+    let checkBtn;
     if (isOriginal) {
+      checkBtn = document.createElement('span');
+      checkBtn.classList.add('event-check');
+      checkBtn.textContent = eventDone(event) ? '✓' : '○';
       checkBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
@@ -297,7 +298,7 @@ function generateAgenda() {
     }
     row.appendChild(timeSpan);
     row.appendChild(titleSpan);
-    row.appendChild(checkBtn);
+    if (checkBtn) row.appendChild(checkBtn);
     row.appendChild(deleteBtn);
     calendar.appendChild(row);
   }
@@ -333,10 +334,11 @@ function createDayViewEvent(event, dateStr) {
   label.title = label.textContent + (eventNotes(event) ? '\n' + eventNotes(event) : '');
   label.addEventListener('click', (e) => { e.stopPropagation(); editEvent(baseDate, baseIndex, dateStr); });
 
-  const checkBtn = document.createElement('span');
-  checkBtn.classList.add('event-check');
-  checkBtn.textContent = eventDone(event) ? '✓' : '○';
+  let checkBtn;
   if (isOriginal) {
+    checkBtn = document.createElement('span');
+    checkBtn.classList.add('event-check');
+    checkBtn.textContent = eventDone(event) ? '✓' : '○';
     checkBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
@@ -357,7 +359,9 @@ function createDayViewEvent(event, dateStr) {
     });
   }
 
-  el.appendChild(label); el.appendChild(checkBtn); el.appendChild(deleteBtn);
+  el.appendChild(label);
+  if (checkBtn) el.appendChild(checkBtn);
+  el.appendChild(deleteBtn);
   return el;
 }
 
@@ -957,10 +961,11 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
         });
       }
 
-      const checkBtn = document.createElement('span');
-      checkBtn.classList.add('event-check');
-      checkBtn.textContent = eventDone(event) ? '✓' : '○';
+      let checkBtn;
       if (isOriginal) {
+        checkBtn = document.createElement('span');
+        checkBtn.classList.add('event-check');
+        checkBtn.textContent = eventDone(event) ? '✓' : '○';
         checkBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
@@ -970,7 +975,7 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
       }
 
       eventElement.appendChild(label);
-      eventElement.appendChild(checkBtn);
+      if (checkBtn) eventElement.appendChild(checkBtn);
       eventElement.appendChild(deleteBtn);
       dayElement.appendChild(eventElement);
   });
