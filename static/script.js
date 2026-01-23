@@ -994,52 +994,88 @@ function exportIcal() {
     String(now.getUTCMinutes()).padStart(2, '0') +
     String(now.getUTCSeconds()).padStart(2, '0') + 'Z';
 
-  for (const [date, dayEvents] of Object.entries(events)) {
-    const [year, month, day] = date.split('-');
-    for (const event of dayEvents) {
-      const time = eventTime(event);
-      const uidKey = date + '\x00' + eventText(event) + '\x00' + time + '\x00' + eventCategory(event);
-      lines.push('BEGIN:VEVENT');
-      lines.push('UID:' + stableHash(uidKey) + '@calendar');
-      lines.push('DTSTAMP:' + dtstamp);
-      if (time) {
-        const [hh, mm] = time.split(':');
-        const start = new Date(+year, +month - 1, +day, +hh, +mm);
-        const endTimeVal = eventEndTime(event);
-        const end = endTimeVal
-          ? (() => { const [eh, em] = endTimeVal.split(':'); return new Date(+year, +month - 1, +day, +eh, +em); })()
-          : new Date(start.getTime() + 60 * 60 * 1000);
-        const fmt = d => d.getFullYear() +
-          String(d.getMonth() + 1).padStart(2, '0') +
-          String(d.getDate()).padStart(2, '0') + 'T' +
-          String(d.getHours()).padStart(2, '0') +
-          String(d.getMinutes()).padStart(2, '0') + '00';
-        lines.push('DTSTART:' + fmt(start));
-        lines.push('DTEND:' + fmt(end));
-      } else {
-        const fmtDate = d => d.getFullYear() +
-          String(d.getMonth() + 1).padStart(2, '0') +
-          String(d.getDate()).padStart(2, '0');
-        const endDateVal = eventEndDate(event);
-        const dtEnd = endDateVal
-          ? (() => { const d2 = new Date(endDateVal + 'T00:00:00'); d2.setDate(d2.getDate() + 1); return d2; })()
-          : new Date(+year, +month - 1, +day + 1);
-        lines.push('DTSTART;VALUE=DATE:' + year + month + day);
-        lines.push('DTEND;VALUE=DATE:' + fmtDate(dtEnd));
-      }
-      lines.push('SUMMARY:' + eventText(event).replace(/[\\;,]/g, c => '\\' + c));
-      const recur = eventRecurrence(event);
+  function uidHash(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+    return (h >>> 0).toString(16).padStart(8, '0');
+  }
+
+  function pushVEvent(eventDate, ev, uid, recurId) {
+    const [year, month, day] = eventDate.split('-');
+    const time = eventTime(ev);
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:' + uid);
+    lines.push('DTSTAMP:' + dtstamp);
+    if (recurId) lines.push('RECURRENCE-ID' + (time ? '' : ';VALUE=DATE') + ':' + recurId);
+    if (time) {
+      const [hh, mm] = time.split(':');
+      const start = new Date(+year, +month - 1, +day, +hh, +mm);
+      const endTimeVal = eventEndTime(ev);
+      const end = endTimeVal
+        ? (() => { const [eh, em] = endTimeVal.split(':'); return new Date(+year, +month - 1, +day, +eh, +em); })()
+        : new Date(start.getTime() + 60 * 60 * 1000);
+      const fmt = d => d.getFullYear() +
+        String(d.getMonth() + 1).padStart(2, '0') +
+        String(d.getDate()).padStart(2, '0') + 'T' +
+        String(d.getHours()).padStart(2, '0') +
+        String(d.getMinutes()).padStart(2, '0') + '00';
+      lines.push('DTSTART:' + fmt(start));
+      lines.push('DTEND:' + fmt(end));
+    } else {
+      const fmtDate = d => d.getFullYear() +
+        String(d.getMonth() + 1).padStart(2, '0') +
+        String(d.getDate()).padStart(2, '0');
+      const endDateVal = eventEndDate(ev);
+      const dtEnd = endDateVal
+        ? (() => { const d2 = new Date(endDateVal + 'T00:00:00'); d2.setDate(d2.getDate() + 1); return d2; })()
+        : new Date(+year, +month - 1, +day + 1);
+      lines.push('DTSTART;VALUE=DATE:' + year + month + day);
+      lines.push('DTEND;VALUE=DATE:' + fmtDate(dtEnd));
+    }
+    lines.push('SUMMARY:' + eventText(ev).replace(/[\\;,]/g, c => '\\' + c));
+    if (!recurId) {
+      const recur = eventRecurrence(ev);
       if (recur) {
         let rrule = 'RRULE:FREQ=' + recur.freq;
         if (recur.count) rrule += ';COUNT=' + recur.count;
         else if (recur.until) rrule += ';UNTIL=' + recur.until;
         lines.push(rrule);
       }
-      const cat = eventCategory(event);
-      if (cat) lines.push('CATEGORIES:' + cat.replace(/[\\;,]/g, c => '\\' + c));
-      const notes = eventNotes(event);
-      if (notes) lines.push('DESCRIPTION:' + notes.replace(/[\\;,]/g, c => '\\' + c).replace(/\n/g, '\\n'));
-      lines.push('END:VEVENT');
+      if (ev.exceptions) {
+        const exdates = Object.entries(ev.exceptions)
+          .filter(([, v]) => v === null)
+          .map(([d]) => d.replace(/-/g, ''));
+        if (exdates.length > 0) {
+          if (time) {
+            lines.push('EXDATE:' + exdates.map(d => d + 'T' + time.replace(':', '') + '00').join(','));
+          } else {
+            lines.push('EXDATE;VALUE=DATE:' + exdates.join(','));
+          }
+        }
+      }
+    }
+    const cat = eventCategory(ev);
+    if (cat) lines.push('CATEGORIES:' + cat.replace(/[\\;,]/g, c => '\\' + c));
+    const notes = eventNotes(ev);
+    if (notes) lines.push('DESCRIPTION:' + notes.replace(/[\\;,]/g, c => '\\' + c).replace(/\n/g, '\\n'));
+    lines.push('END:VEVENT');
+  }
+
+  for (const [date, dayEvents] of Object.entries(events)) {
+    for (const event of dayEvents) {
+      const time = eventTime(event);
+      const uidKey = date + '\x00' + eventText(event) + '\x00' + time + '\x00' + eventCategory(event);
+      const uid = uidHash(uidKey) + '@calendar';
+      pushVEvent(date, event, uid, null);
+      if (event.exceptions) {
+        for (const [excDate, excVal] of Object.entries(event.exceptions)) {
+          if (!excVal) continue;
+          const recurId = time
+            ? excDate.replace(/-/g, '') + 'T' + time.replace(':', '') + '00'
+            : excDate.replace(/-/g, '');
+          pushVEvent(excDate, excVal, uid, recurId);
+        }
+      }
     }
   }
 
