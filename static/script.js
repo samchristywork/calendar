@@ -154,30 +154,30 @@ function updateHash() {
   history.replaceState(null, '', '#' + parts.join(','));
 }
 
-function editEvent(date, index, occurrenceDate) {
+async function editEvent(date, index, occurrenceDate) {
   const base = events[date][index];
   const isInstance = occurrenceDate && occurrenceDate !== date && eventRecurrence(base);
 
   let scope = 'all';
   if (isInstance) {
-    const answer = prompt(
-      'Edit recurring event:\n  1 - Just this occurrence (' + occurrenceDate + ')\n  2 - This and future occurrences\n  3 - All occurrences',
-      '1'
-    );
-    if (answer === null) return;
-    const t = answer.trim();
-    if (t === '2') scope = 'future';
-    else if (t === '3') scope = 'all';
-    else scope = 'one';
+    scope = await showScopeDialog(occurrenceDate);
+    if (!scope) return;
   }
 
   const src = (scope === 'one' && base.exceptions && base.exceptions[occurrenceDate])
     ? base.exceptions[occurrenceDate] : base;
 
-  const updatedText = prompt("Edit event:", eventText(src));
-  if (updatedText === null) return;
+  const result = await showEventForm(
+    isInstance ? 'Edit - ' + occurrenceDate : 'Edit event',
+    { text: eventText(src), time: eventTime(src), endTime: eventEndTime(src),
+      endDate: eventEndDate(src), category: eventCategory(src), notes: eventNotes(src),
+      recurrence: scope !== 'one' ? eventRecurrence(src) : null },
+    scope !== 'one',
+    true
+  );
+  if (!result) return;
 
-  if (updatedText.trim() === '') {
+  if (result._deleted) {
     if (scope === 'one') {
       if (!events[date][index].exceptions) events[date][index].exceptions = {};
       events[date][index].exceptions[occurrenceDate] = null;
@@ -190,35 +190,14 @@ function editEvent(date, index, occurrenceDate) {
       events[date].splice(index, 1);
       if (events[date].length === 0) delete events[date];
     }
-    saveEvents();
-    generateCalendar();
-    return;
+    saveEvents(); generateCalendar(); return;
   }
 
-  const startDate = (scope === 'one' || scope === 'future') ? occurrenceDate : date;
-  const updatedEndDate = promptEndDate(startDate, eventEndDate(src));
-  if (updatedEndDate === null) return;
-  let updatedTime = '', updatedEndTime = '';
-  if (!updatedEndDate) {
-    const t = promptTime("Time (HH:MM, or leave blank):", eventTime(src));
-    if (t === null) return;
-    updatedTime = t;
-    const et = updatedTime ? promptTime("End time (HH:MM, or leave blank):", eventEndTime(src)) : '';
-    if (et === null) return;
-    updatedEndTime = et;
-  }
-  const updatedCategory = prompt("Category (or leave blank):", eventCategory(src));
-  if (updatedCategory === null) return;
-  const updatedNotes = prompt("Notes (or leave blank):", eventNotes(src));
-  if (updatedNotes === null) return;
-
-  const updatedEvent = { text: updatedText.trim(), time: updatedTime, endTime: updatedEndTime, category: updatedCategory.trim(), notes: updatedNotes.trim() };
-  if (updatedEndDate) updatedEvent.endDate = updatedEndDate;
+  const updatedEvent = { text: result.text, time: result.time, endTime: result.endTime, category: result.category, notes: result.notes };
+  if (result.endDate) updatedEvent.endDate = result.endDate;
 
   if (scope === 'all') {
-    const updatedRecurrence = promptRecurrence(eventRecurrence(base));
-    if (updatedRecurrence === null) return;
-    if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
+    if (result.recurrence) updatedEvent.recurrence = result.recurrence;
     if (base.exceptions) updatedEvent.exceptions = base.exceptions;
     if (base.done) updatedEvent.done = true;
     events[date][index] = updatedEvent;
@@ -231,16 +210,13 @@ function editEvent(date, index, occurrenceDate) {
     dayBefore.setDate(dayBefore.getDate() - 1);
     const untilStr = toDateStr(dayBefore).replace(/-/g, '');
     if (base.recurrence) events[date][index].recurrence = { freq: base.recurrence.freq, until: untilStr };
-    const updatedRecurrence = promptRecurrence(eventRecurrence(base));
-    if (updatedRecurrence === null) return;
-    if (updatedRecurrence) updatedEvent.recurrence = updatedRecurrence;
+    if (result.recurrence) updatedEvent.recurrence = result.recurrence;
     if (!events[occurrenceDate]) events[occurrenceDate] = [];
     events[occurrenceDate].push(updatedEvent);
     events[occurrenceDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
   }
 
-  saveEvents();
-  generateCalendar();
+  saveEvents(); generateCalendar();
 }
 
 function generateAgenda() {
@@ -310,9 +286,9 @@ function generateAgenda() {
     deleteBtn.classList.add('event-delete', 'agenda-delete');
     deleteBtn.textContent = '×';
     if (isOriginal) {
-      deleteBtn.addEventListener('click', (e) => {
+      deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (!confirm('Delete "' + eventText(event) + '"?')) return;
+        if (!await showConfirm('Delete "' + eventText(event) + '"?', 'Delete')) return;
         events[baseDate].splice(baseIndex, 1);
         if (events[baseDate].length === 0) delete events[baseDate];
         saveEvents();
@@ -372,9 +348,9 @@ function createDayViewEvent(event, dateStr) {
   deleteBtn.classList.add('event-delete');
   deleteBtn.textContent = '×';
   if (isOriginal) {
-    deleteBtn.addEventListener('click', (e) => {
+    deleteBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!confirm('Delete "' + eventText(event) + '"?')) return;
+      if (!await showConfirm('Delete "' + eventText(event) + '"?', 'Delete')) return;
       events[baseDate].splice(baseIndex, 1);
       if (events[baseDate].length === 0) delete events[baseDate];
       saveEvents(); generateCalendar();
@@ -515,58 +491,317 @@ function normalizeTime(t) {
   return h.padStart(2, '0') + ':' + (m || '00');
 }
 
-function promptEndDate(startDate, existing) {
-  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
-  let value = existing || '';
-  while (true) {
-    const raw = prompt("End date (YYYY-MM-DD for multi-day, or leave blank):", value);
-    if (raw === null) return null;
-    const input = raw.trim();
-    if (input === '') return '';
-    if (dateRe.test(input) && !isNaN(Date.parse(input)) && input > startDate) return input;
-    alert('Enter a date after ' + startDate + ' in YYYY-MM-DD format, or leave blank.');
-    value = input;
-  }
+function showModal(buildFn) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('modal-overlay');
+    const modal = document.getElementById('modal');
+
+    function close(value) {
+      overlay.classList.add('modal-hidden');
+      overlay.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onEscape, true);
+      resolve(value);
+    }
+
+    function onBackdrop(e) { if (e.target === overlay) close(null); }
+    function onEscape(e) {
+      if (e.key === 'Escape') { e.stopImmediatePropagation(); close(null); }
+    }
+
+    overlay.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onEscape, true);
+
+    modal.innerHTML = '';
+    modal.appendChild(buildFn(close));
+    overlay.classList.remove('modal-hidden');
+    setTimeout(() => {
+      const f = modal.querySelector('input:not([type=hidden]),textarea,select');
+      if (f) f.focus();
+    }, 0);
+  });
 }
 
-function promptRecurrence(existing) {
-  const freqs = ['daily', 'weekly', 'monthly', 'yearly'];
-  const defaultFreq = existing ? existing.freq.toLowerCase() : '';
-  let freq = '';
-  while (true) {
-    const raw = prompt("Repeat? (daily / weekly / monthly / yearly, or leave blank):", defaultFreq);
-    if (raw === null) return null;
-    const input = raw.trim().toLowerCase();
-    if (input === '' || freqs.includes(input)) { freq = input; break; }
-    alert('Enter: daily, weekly, monthly, yearly, or leave blank.');
-  }
-  if (!freq) return false;
-  const dateRe = /^\d{4}-\d{2}-\d{2}$/;
-  const defaultEnd = existing ? (existing.count ? existing.count + 'x' : existing.until ? existing.until : '') : '';
-  let end = null;
-  while (true) {
-    const raw = prompt("Ends after how many occurrences (e.g. 10x), by date (YYYY-MM-DD), or leave blank:", defaultEnd);
-    if (raw === null) return null;
-    const input = raw.trim();
-    if (input === '') { break; }
-    if (/^\d+x$/i.test(input)) { end = { count: parseInt(input) }; break; }
-    if (dateRe.test(input) && !isNaN(Date.parse(input))) { end = { until: input.replace(/-/g, '') }; break; }
-    alert('Enter a count like 10x, a date like 2026-12-31, or leave blank.');
-  }
-  return { freq: freq.toUpperCase(), ...(end || {}) };
+function makeFormGroup(labelText) {
+  const g = document.createElement('div');
+  g.className = 'modal-form-group';
+  const l = document.createElement('label');
+  l.textContent = labelText;
+  g.appendChild(l);
+  return g;
 }
 
-function promptTime(message, defaultValue) {
-  const timeRe = /^([01]?\d|2[0-3]):([0-5]\d)$/;
-  let value = defaultValue !== undefined ? defaultValue : '';
-  while (true) {
-    const input = prompt(message, value);
-    if (input === null) return null;
-    const trimmed = input.trim();
-    if (trimmed === '' || timeRe.test(trimmed)) return trimmed;
-    alert('Please enter a time in HH:MM format (e.g. 09:30), or leave blank.');
-    value = trimmed;
-  }
+function showConfirm(message, confirmLabel = 'OK') {
+  return showModal((close) => {
+    const el = document.createElement('div');
+    const p = document.createElement('p');
+    p.className = 'modal-confirm-msg';
+    p.textContent = message;
+    el.appendChild(p);
+    const btns = document.createElement('div');
+    btns.className = 'modal-buttons';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'modal-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => close(false);
+    const okBtn = document.createElement('button');
+    okBtn.className = 'modal-btn modal-btn-danger';
+    okBtn.textContent = confirmLabel;
+    okBtn.onclick = () => close(true);
+    btns.appendChild(cancelBtn);
+    btns.appendChild(okBtn);
+    el.appendChild(btns);
+    return el;
+  });
+}
+
+function showScopeDialog(occurrenceDate) {
+  return showModal((close) => {
+    const el = document.createElement('div');
+    const h2 = document.createElement('h2');
+    h2.className = 'modal-title';
+    h2.textContent = 'Edit recurring event';
+    el.appendChild(h2);
+    const sub = document.createElement('p');
+    sub.className = 'modal-confirm-msg';
+    sub.textContent = 'Which occurrences should be changed?';
+    el.appendChild(sub);
+    const scopeBtns = document.createElement('div');
+    scopeBtns.className = 'modal-scope-buttons';
+    [['one', 'Just this occurrence', occurrenceDate],
+     ['future', 'This and future occurrences', ''],
+     ['all', 'All occurrences', '']].forEach(([scope, label, note]) => {
+      const btn = document.createElement('button');
+      btn.className = 'modal-scope-btn';
+      const strong = document.createElement('strong');
+      strong.textContent = label;
+      btn.appendChild(strong);
+      if (note) {
+        const small = document.createElement('div');
+        small.style.cssText = 'font-size:0.8em;opacity:0.65;margin-top:0.1rem';
+        small.textContent = note;
+        btn.appendChild(small);
+      }
+      btn.onclick = () => close(scope);
+      scopeBtns.appendChild(btn);
+    });
+    el.appendChild(scopeBtns);
+    const cancelRow = document.createElement('div');
+    cancelRow.className = 'modal-buttons';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'modal-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => close(null);
+    cancelRow.appendChild(cancelBtn);
+    el.appendChild(cancelRow);
+    return el;
+  });
+}
+
+function showDateDialog(defaultDate) {
+  return showModal((close) => {
+    const el = document.createElement('div');
+    const h2 = document.createElement('h2');
+    h2.className = 'modal-title';
+    h2.textContent = 'Go to date';
+    el.appendChild(h2);
+    const group = makeFormGroup('Date');
+    const input = document.createElement('input');
+    input.type = 'date';
+    input.value = defaultDate;
+    group.appendChild(input);
+    el.appendChild(group);
+    const btns = document.createElement('div');
+    btns.className = 'modal-buttons';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'modal-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.onclick = () => close(null);
+    const goBtn = document.createElement('button');
+    goBtn.className = 'modal-btn modal-btn-primary';
+    goBtn.textContent = 'Go';
+    goBtn.onclick = () => { if (input.value) close(input.value); };
+    btns.appendChild(cancelBtn);
+    btns.appendChild(goBtn);
+    el.appendChild(btns);
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); goBtn.click(); } });
+    return el;
+  });
+}
+
+function showEventForm(title, data, showRecurrence, showDelete) {
+  return showModal((close) => {
+    const form = document.createElement('div');
+
+    const h2 = document.createElement('h2');
+    h2.className = 'modal-title';
+    h2.textContent = title;
+    form.appendChild(h2);
+
+    const textGroup = makeFormGroup('Event *');
+    const textInput = document.createElement('input');
+    textInput.type = 'text';
+    textInput.value = data.text || '';
+    textGroup.appendChild(textInput);
+    form.appendChild(textGroup);
+
+    const endDateGroup = makeFormGroup('End date (multi-day)');
+    const endDateInput = document.createElement('input');
+    endDateInput.type = 'date';
+    endDateInput.value = data.endDate || '';
+    endDateGroup.appendChild(endDateInput);
+    form.appendChild(endDateGroup);
+
+    const timeGroup = makeFormGroup('Time');
+    const timeInput = document.createElement('input');
+    timeInput.type = 'time';
+    timeInput.value = data.time || '';
+    timeGroup.appendChild(timeInput);
+    form.appendChild(timeGroup);
+
+    const endTimeGroup = makeFormGroup('End time');
+    const endTimeInput = document.createElement('input');
+    endTimeInput.type = 'time';
+    endTimeInput.value = data.endTime || '';
+    endTimeGroup.appendChild(endTimeInput);
+    form.appendChild(endTimeGroup);
+
+    const catGroup = makeFormGroup('Category');
+    const catInput = document.createElement('input');
+    catInput.type = 'text';
+    catInput.value = data.category || '';
+    catGroup.appendChild(catInput);
+    form.appendChild(catGroup);
+
+    const notesGroup = makeFormGroup('Notes');
+    const notesInput = document.createElement('textarea');
+    notesInput.value = data.notes || '';
+    notesGroup.appendChild(notesInput);
+    form.appendChild(notesGroup);
+
+    let freqSelect, recurEndGroup, recurEndTypeSelect, countInput, untilInput;
+    if (showRecurrence) {
+      const recurGroup = makeFormGroup('Repeat');
+      freqSelect = document.createElement('select');
+      [['', 'None'], ['DAILY', 'Daily'], ['WEEKLY', 'Weekly'], ['MONTHLY', 'Monthly'], ['YEARLY', 'Yearly']].forEach(([val, label]) => {
+        const opt = document.createElement('option');
+        opt.value = val; opt.textContent = label;
+        if ((data.recurrence ? data.recurrence.freq : '') === val) opt.selected = true;
+        freqSelect.appendChild(opt);
+      });
+      recurGroup.appendChild(freqSelect);
+      form.appendChild(recurGroup);
+
+      recurEndGroup = makeFormGroup('Ends');
+      recurEndGroup.style.display = data.recurrence ? '' : 'none';
+      recurEndTypeSelect = document.createElement('select');
+      [['never', 'Never'], ['count', 'After N occurrences'], ['until', 'By date']].forEach(([val, label]) => {
+        const opt = document.createElement('option');
+        opt.value = val; opt.textContent = label;
+        recurEndTypeSelect.appendChild(opt);
+      });
+      if (data.recurrence && data.recurrence.count) recurEndTypeSelect.value = 'count';
+      else if (data.recurrence && data.recurrence.until) recurEndTypeSelect.value = 'until';
+      recurEndGroup.appendChild(recurEndTypeSelect);
+
+      countInput = document.createElement('input');
+      countInput.type = 'number'; countInput.min = 1;
+      countInput.value = (data.recurrence && data.recurrence.count) || 10;
+      countInput.style.display = (data.recurrence && data.recurrence.count) ? '' : 'none';
+      recurEndGroup.appendChild(countInput);
+
+      untilInput = document.createElement('input');
+      untilInput.type = 'date';
+      if (data.recurrence && data.recurrence.until) {
+        const u = data.recurrence.until;
+        untilInput.value = u.slice(0, 4) + '-' + u.slice(4, 6) + '-' + u.slice(6, 8);
+      }
+      untilInput.style.display = (data.recurrence && data.recurrence.until) ? '' : 'none';
+      recurEndGroup.appendChild(untilInput);
+      form.appendChild(recurEndGroup);
+
+      freqSelect.addEventListener('change', () => {
+        recurEndGroup.style.display = freqSelect.value ? '' : 'none';
+      });
+      recurEndTypeSelect.addEventListener('change', () => {
+        countInput.style.display = recurEndTypeSelect.value === 'count' ? '' : 'none';
+        untilInput.style.display = recurEndTypeSelect.value === 'until' ? '' : 'none';
+      });
+    }
+
+    if (endDateInput.value) {
+      timeGroup.style.display = 'none';
+      endTimeGroup.style.display = 'none';
+    } else if (!timeInput.value) {
+      endTimeGroup.style.display = 'none';
+    }
+    endDateInput.addEventListener('input', () => {
+      const has = endDateInput.value !== '';
+      timeGroup.style.display = has ? 'none' : '';
+      endTimeGroup.style.display = has ? 'none' : '';
+    });
+    timeInput.addEventListener('input', () => {
+      endTimeGroup.style.display = timeInput.value ? '' : 'none';
+    });
+
+    const btns = document.createElement('div');
+    btns.className = 'modal-buttons';
+
+    if (showDelete) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'modal-btn modal-btn-danger modal-btn-delete';
+      deleteBtn.textContent = 'Delete';
+      let armed = false;
+      deleteBtn.addEventListener('click', () => {
+        if (!armed) {
+          armed = true;
+          deleteBtn.textContent = 'Confirm?';
+          setTimeout(() => { if (armed) { armed = false; deleteBtn.textContent = 'Delete'; } }, 2500);
+        } else {
+          close({ _deleted: true });
+        }
+      });
+      btns.appendChild(deleteBtn);
+    }
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'modal-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => close(null));
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'modal-btn modal-btn-primary';
+    saveBtn.textContent = 'Save';
+    saveBtn.addEventListener('click', () => {
+      const text = textInput.value.trim();
+      if (!text) { textInput.style.outline = '2px solid #dc2626'; textInput.focus(); return; }
+      textInput.style.outline = '';
+      let recurrence = null;
+      if (showRecurrence && freqSelect && freqSelect.value) {
+        recurrence = { freq: freqSelect.value };
+        if (recurEndTypeSelect.value === 'count' && countInput.value) {
+          recurrence.count = parseInt(countInput.value, 10);
+        } else if (recurEndTypeSelect.value === 'until' && untilInput.value) {
+          recurrence.until = untilInput.value.replace(/-/g, '');
+        }
+      }
+      close({ text, time: timeInput.value, endTime: endTimeInput.value, endDate: endDateInput.value, category: catInput.value.trim(), notes: notesInput.value.trim(), recurrence });
+    });
+
+    btns.appendChild(cancelBtn);
+    btns.appendChild(saveBtn);
+    form.appendChild(btns);
+
+    form.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
+        e.preventDefault(); saveBtn.click();
+      }
+    });
+
+    return form;
+  });
 }
 
 function stableHash(s) {
@@ -600,30 +835,15 @@ function saveEvents() {
   }).catch(() => showToast('Error saving events: could not reach server', true));
 }
 
-function addEventForDate(dateText) {
-  const text = prompt("Add an event for " + dateText + ":");
-  if (!text) return;
-  const endDate = promptEndDate(dateText, '');
-  if (endDate === null) return;
-  let time = '', endTime = '';
-  if (!endDate) {
-    const t = promptTime("Time (HH:MM, or leave blank):");
-    if (t === null) return;
-    time = t;
-    const et = time ? promptTime("End time (HH:MM, or leave blank):") : '';
-    if (et === null) return;
-    endTime = et;
-  }
-  const category = prompt("Category (or leave blank):");
-  if (category === null) return;
-  const notes = prompt("Notes (or leave blank):");
-  if (notes === null) return;
-  const recurrence = promptRecurrence(null);
-  if (recurrence === null) return;
+async function addEventForDate(dateText) {
+  const result = await showEventForm('Add event - ' + dateText, {
+    text: '', time: '', endTime: '', endDate: '', category: '', notes: '', recurrence: null
+  }, true, false);
+  if (!result) return;
   if (!events[dateText]) events[dateText] = [];
-  const newEvent = { text: text.trim(), time, endTime, category: category.trim(), notes: notes.trim() };
-  if (endDate) newEvent.endDate = endDate;
-  if (recurrence) newEvent.recurrence = recurrence;
+  const newEvent = { text: result.text, time: result.time, endTime: result.endTime, category: result.category, notes: result.notes };
+  if (result.endDate) newEvent.endDate = result.endDate;
+  if (result.recurrence) newEvent.recurrence = result.recurrence;
   events[dateText].push(newEvent);
   events[dateText].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
   saveEvents();
@@ -733,9 +953,9 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
       deleteBtn.classList.add('event-delete');
       deleteBtn.textContent = '×';
       if (isOriginal) {
-        deleteBtn.addEventListener('click', (e) => {
+        deleteBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
-          if (!confirm('Delete "' + eventText(event) + '"?')) return;
+          if (!await showConfirm('Delete "' + eventText(event) + '"?', 'Delete')) return;
           events[baseDate].splice(baseIndex, 1);
           if (events[baseDate].length === 0) delete events[baseDate];
           saveEvents();
@@ -941,7 +1161,7 @@ document.getElementById('json-restore').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = async (ev) => {
     let data;
     try { data = JSON.parse(ev.target.result); } catch {
       showToast('Invalid JSON file', true);
@@ -953,7 +1173,7 @@ document.getElementById('json-restore').addEventListener('change', (e) => {
       e.target.value = '';
       return;
     }
-    if (!confirm('Replace all current events with the backup? This cannot be undone.')) {
+    if (!await showConfirm('Replace all current events with the backup? This cannot be undone.', 'Restore')) {
       e.target.value = '';
       return;
     }
@@ -980,7 +1200,8 @@ document.getElementById('ical-import').addEventListener('change', (e) => {
   reader.readAsText(file);
 });
 
-document.addEventListener('keydown', (event) => {
+document.addEventListener('keydown', async (event) => {
+  if (!document.getElementById('modal-overlay').classList.contains('modal-hidden')) return;
   if (document.activeElement === document.getElementById('search')) return;
   if (event.key === '/') {
     event.preventDefault();
@@ -1040,10 +1261,10 @@ document.addEventListener('keydown', (event) => {
     showToast('Week starts on ' + (weekStart === 1 ? 'Monday' : 'Sunday'));
     generateCalendar();
   } else if (event.key === 'g') {
-    const raw = prompt('Go to date (YYYY-MM-DD):', toDateStr(currentDate));
-    if (!raw) return;
-    const d = new Date(raw.trim() + 'T00:00:00');
-    if (isNaN(d.getTime())) { alert('Enter a date in YYYY-MM-DD format.'); return; }
+    const dateStr = await showDateDialog(toDateStr(currentDate));
+    if (!dateStr) return;
+    const d = new Date(dateStr + 'T00:00:00');
+    if (isNaN(d.getTime())) return;
     currentDate = d;
     viewMode = 'calendar';
     generateCalendar();
