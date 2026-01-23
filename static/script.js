@@ -804,12 +804,6 @@ function showEventForm(title, data, showRecurrence, showDelete) {
   });
 }
 
-function stableHash(s) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-  return (h >>> 0).toString(16).padStart(8, '0');
-}
-
 function categoryHue(cat) {
   if (!cat) return null;
   let h = 0;
