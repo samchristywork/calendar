@@ -417,6 +417,11 @@ function generateDayView() {
 
   calendar.appendChild(grid);
 
+  if (isToday) {
+    const currentHourRow = grid.querySelector('.day-view-current-hour');
+    if (currentHourRow) grid.scrollTop = Math.max(0, currentHourRow.offsetTop - 80);
+  }
+
   const sideLabel = document.getElementById('side-label');
   sideLabel.innerHTML = '';
   const span = document.createElement('span');
