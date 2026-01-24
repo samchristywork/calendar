@@ -1287,7 +1287,7 @@ document.addEventListener('keydown', async (event) => {
     currentDate = new Date();
     generateCalendar();
   } else if (event.key === 'n') {
-    addEventForDate(toDateStr(new Date()));
+    addEventForDate(toDateStr(currentDate));
   } else if (event.key === 'l') {
     viewMode = viewMode === 'agenda' ? 'calendar' : 'agenda';
     generateCalendar();
