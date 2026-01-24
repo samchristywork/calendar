@@ -1330,6 +1330,7 @@ document.addEventListener('keydown', async (event) => {
 let wheelCooldown = null;
 document.addEventListener('wheel', (e) => {
   if (e.target.closest('.day-view')) return;
+  if (viewMode === 'agenda') return;
   e.preventDefault();
   if (wheelCooldown) return;
   currentDate.setDate(currentDate.getDate() + (e.deltaY > 0 ? 7 : -7));
