@@ -69,6 +69,26 @@ function buildEffectiveEvents(visibleStart, visibleEnd) {
       const until = recur.until
         ? new Date(+recur.until.slice(0, 4), +recur.until.slice(4, 6) - 1, +recur.until.slice(6, 8))
         : null;
+      // Fast-forward: skip intervals that are entirely before visibleStart
+      if (visibleStart > current) {
+        let skip = 0;
+        switch (recur.freq) {
+          case 'DAILY':   skip = Math.floor((visibleStart - current) / 86400000) - 1; break;
+          case 'WEEKLY':  skip = Math.floor((visibleStart - current) / (7 * 86400000)) - 1; break;
+          case 'MONTHLY': skip = (visibleStart.getFullYear() - current.getFullYear()) * 12
+                                 + (visibleStart.getMonth() - current.getMonth()) - 1; break;
+          case 'YEARLY':  skip = visibleStart.getFullYear() - current.getFullYear() - 1; break;
+        }
+        if (skip > 0) {
+          switch (recur.freq) {
+            case 'DAILY':   current.setDate(current.getDate() + skip); break;
+            case 'WEEKLY':  current.setDate(current.getDate() + skip * 7); break;
+            case 'MONTHLY': current.setMonth(current.getMonth() + skip); break;
+            case 'YEARLY':  current.setFullYear(current.getFullYear() + skip); break;
+          }
+          count += skip;
+        }
+      }
       while (true) {
         switch (recur.freq) {
           case 'DAILY':   current.setDate(current.getDate() + 1); break;
