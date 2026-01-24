@@ -108,6 +108,23 @@ function buildEffectiveEvents(visibleStart, visibleEnd) {
           effective[dateStr].push(exc
             ? { ...exc, _baseDate: date, _baseIndex: idx }
             : { ...event, _baseDate: date, _baseIndex: idx });
+          // Expand multi-day span for this recurrence occurrence
+          const occEndDate = eventEndDate(exc || event);
+          if (occEndDate) {
+            const baseStart = new Date(date + 'T00:00:00');
+            const baseEnd = new Date(occEndDate + 'T00:00:00');
+            const spanDays = Math.round((baseEnd - baseStart) / 86400000);
+            if (spanDays > 0) {
+              const spanCur = new Date(dateStr + 'T00:00:00');
+              for (let s = 0; s < spanDays; s++) {
+                spanCur.setDate(spanCur.getDate() + 1);
+                if (spanCur > visibleEnd) break;
+                const spanDateStr = toDateStr(spanCur);
+                if (!effective[spanDateStr]) effective[spanDateStr] = [];
+                effective[spanDateStr].push({ ...event, _baseDate: date, _baseIndex: idx });
+              }
+            }
+          }
         }
       }
     }
