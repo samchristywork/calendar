@@ -1265,6 +1265,12 @@ document.addEventListener('keydown', async (event) => {
   } else if (event.key === 'ArrowDown') {
     currentDate.setDate(currentDate.getDate() + (viewMode === 'day' ? 1 : 7));
     generateCalendar();
+  } else if (event.key === 'ArrowLeft') {
+    currentDate.setDate(currentDate.getDate() - (viewMode === 'day' ? 1 : 7));
+    generateCalendar();
+  } else if (event.key === 'ArrowRight') {
+    currentDate.setDate(currentDate.getDate() + (viewMode === 'day' ? 1 : 7));
+    generateCalendar();
   } else if (event.key === 'w') {
     nWeeks = 1;
     localStorage.setItem('nWeeks', nWeeks);
