@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 func eventsHandler(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +27,7 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 
 		data := string(body)
 
-		file, err := os.Create("data/events.json")
+		file, err := os.Create(filepath.Join(baseDir, "data", "events.json"))
 		if err != nil {
 			http.Error(w, "Could not create file", http.StatusInternalServerError)
 			return
@@ -41,7 +42,7 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok"}`))
 	} else if r.Method == http.MethodGet {
-		data, err := os.ReadFile("data/events.json")
+		data, err := os.ReadFile(filepath.Join(baseDir, "data", "events.json"))
 		if err != nil {
 			if os.IsNotExist(err) {
 				w.Header().Set("Content-Type", "application/json")
@@ -59,7 +60,17 @@ func eventsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var baseDir string
+
 func main() {
+	baseDir = "."
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Dir(exe)
+		if _, err := os.Stat(filepath.Join(dir, "static")); err == nil {
+			baseDir = dir
+		}
+	}
+
 	defaultPort := "8080"
 	if p := os.Getenv("PORT"); p != "" {
 		defaultPort = p
@@ -67,11 +78,11 @@ func main() {
 	port := flag.String("port", defaultPort, "port to listen on")
 	flag.Parse()
 
-	if err := os.MkdirAll("data", 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(baseDir, "data"), 0755); err != nil {
 		fmt.Fprintf(os.Stderr, "Could not create data directory: %v\n", err)
 		os.Exit(1)
 	}
-	http.Handle("/", http.FileServer(http.Dir("static")))
+	http.Handle("/", http.FileServer(http.Dir(filepath.Join(baseDir, "static"))))
 	http.Handle("/events.json", http.HandlerFunc(eventsHandler))
 	addr := ":" + *port
 	fmt.Printf("Serving on http://localhost:%s\n", *port)
