@@ -1029,14 +1029,39 @@ function showToast(message, error = false) {
   setTimeout(() => toast.remove(), 3000);
 }
 
+let _saveTimer = null;
+const _saveIndicator = (() => {
+  const el = document.createElement('div');
+  el.className = 'save-indicator';
+  document.body.appendChild(el);
+  return el;
+})();
+
 function saveEvents() {
-  fetch('events.json', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(events)
-  }).then(res => {
-    if (!res.ok) showToast('Error saving events: server returned ' + res.status, true);
-  }).catch(() => showToast('Error saving events: could not reach server', true));
+  _saveIndicator.textContent = 'Saving…';
+  _saveIndicator.classList.add('save-indicator-visible');
+  _saveIndicator.classList.remove('save-indicator-saved');
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    _saveTimer = null;
+    fetch('events.json', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(events)
+    }).then(res => {
+      if (!res.ok) {
+        _saveIndicator.classList.remove('save-indicator-visible');
+        showToast('Error saving events: server returned ' + res.status, true);
+      } else {
+        _saveIndicator.textContent = 'Saved';
+        _saveIndicator.classList.add('save-indicator-saved');
+        setTimeout(() => _saveIndicator.classList.remove('save-indicator-visible', 'save-indicator-saved'), 1500);
+      }
+    }).catch(() => {
+      _saveIndicator.classList.remove('save-indicator-visible');
+      showToast('Error saving events: could not reach server', true);
+    });
+  }, 500);
 }
 
 async function addEventForDate(dateText) {

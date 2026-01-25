@@ -136,6 +136,21 @@ body {
   width: 14rem;
 }
 
+.save-indicator {
+  position: fixed;
+  top: 0.35rem;
+  left: 2.4rem;
+  font-size: 0.75em;
+  opacity: 0;
+  transition: opacity 0.3s;
+  color: var(--text-color);
+  pointer-events: none;
+  z-index: 20;
+}
+
+.save-indicator-visible { opacity: 0.45; }
+.save-indicator-saved   { opacity: 0.7; }
+
 .side-label {
   position: fixed;
   left: 0;
