@@ -664,6 +664,9 @@ function generateCalendar() {
     if (monthKey !== lastMonthKey) {
       span.textContent = d.toLocaleString('default', { month: 'short' }) + ' W' + wNum;
       span.title = d.toLocaleString('default', { month: 'long' }) + ' ' + d.getFullYear();
+      span.classList.add('side-label-month');
+      const spanYear = d.getFullYear(), spanMonth = d.getMonth();
+      span.addEventListener('click', (e) => { e.stopPropagation(); showMiniMonth(span, spanYear, spanMonth); });
       lastMonthKey = monthKey;
     } else {
       span.textContent = 'W' + wNum;
@@ -677,6 +680,117 @@ function isoWeekNumber(date) {
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+let _miniMonthEl = null;
+let _miniMonthOutsideHandler = null;
+
+function closeMiniMonth() {
+  if (_miniMonthEl) {
+    _miniMonthEl.remove();
+    _miniMonthEl = null;
+  }
+  if (_miniMonthOutsideHandler) {
+    document.removeEventListener('click', _miniMonthOutsideHandler);
+    _miniMonthOutsideHandler = null;
+  }
+}
+
+function showMiniMonth(anchorEl, year, month) {
+  closeMiniMonth();
+  const popup = document.createElement('div');
+  popup.className = 'mini-month';
+  const rect = anchorEl.getBoundingClientRect();
+  popup.style.top = Math.min(rect.top, window.innerHeight - 260) + 'px';
+
+  let dispYear = year, dispMonth = month;
+
+  function render() {
+    popup.innerHTML = '';
+
+    const header = document.createElement('div');
+    header.className = 'mini-month-header';
+
+    const prev = document.createElement('span');
+    prev.className = 'mini-month-nav';
+    prev.textContent = '‹';
+    prev.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dispMonth--;
+      if (dispMonth < 0) { dispMonth = 11; dispYear--; }
+      render();
+    });
+
+    const title = document.createElement('span');
+    title.textContent = new Date(dispYear, dispMonth, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    const next = document.createElement('span');
+    next.className = 'mini-month-nav';
+    next.textContent = '›';
+    next.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dispMonth++;
+      if (dispMonth > 11) { dispMonth = 0; dispYear++; }
+      render();
+    });
+
+    header.appendChild(prev);
+    header.appendChild(title);
+    header.appendChild(next);
+    popup.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className = 'mini-month-grid';
+
+    const dayNames = weekStart === 1
+      ? ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+      : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    for (const dn of dayNames) {
+      const cell = document.createElement('span');
+      cell.className = 'mini-month-dayname';
+      cell.textContent = dn;
+      grid.appendChild(cell);
+    }
+
+    const firstDay = new Date(dispYear, dispMonth, 1);
+    const startOffset = weekStart === 1 ? (firstDay.getDay() + 6) % 7 : firstDay.getDay();
+    const daysInMonth = new Date(dispYear, dispMonth + 1, 0).getDate();
+    const todayStr = toDateStr(new Date());
+    const totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
+
+    for (let i = 0; i < totalCells; i++) {
+      const dayNum = i - startOffset + 1;
+      const cell = document.createElement('span');
+      cell.className = 'mini-month-day';
+      if (dayNum < 1 || dayNum > daysInMonth) {
+        cell.classList.add('mini-month-other');
+      } else {
+        cell.textContent = dayNum;
+        const ds = dispYear + '-' + String(dispMonth + 1).padStart(2, '0') + '-' + String(dayNum).padStart(2, '0');
+        if (ds === todayStr) cell.classList.add('mini-month-today');
+        cell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentDate = new Date(ds + 'T00:00:00');
+          closeMiniMonth();
+          generateCalendar();
+        });
+      }
+      grid.appendChild(cell);
+    }
+
+    popup.appendChild(grid);
+  }
+
+  render();
+  document.body.appendChild(popup);
+  _miniMonthEl = popup;
+
+  setTimeout(() => {
+    _miniMonthOutsideHandler = (e) => {
+      if (!popup.contains(e.target)) closeMiniMonth();
+    };
+    document.addEventListener('click', _miniMonthOutsideHandler);
+  }, 0);
 }
 
 function eventText(e) { return typeof e === 'string' ? e : e.text; }

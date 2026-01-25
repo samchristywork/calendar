@@ -173,6 +173,79 @@ body {
   font-size: 0.85em;
 }
 
+.side-label-month {
+  cursor: pointer;
+  text-decoration: underline dotted;
+}
+
+.mini-month {
+  position: fixed;
+  left: 2.3rem;
+  background: var(--body-bg);
+  border: 1px solid var(--day-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  z-index: 200;
+  padding: 0.5rem;
+  width: 13rem;
+  font-size: 0.82em;
+}
+
+.mini-month-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  font-weight: bold;
+}
+
+.mini-month-nav {
+  cursor: pointer;
+  padding: 0 0.3rem;
+  user-select: none;
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.mini-month-nav:hover {
+  opacity: 0.6;
+}
+
+.mini-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.mini-month-dayname {
+  text-align: center;
+  opacity: 0.5;
+  font-size: 0.9em;
+  padding-bottom: 2px;
+}
+
+.mini-month-day {
+  text-align: center;
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px 0;
+  line-height: 1.6;
+}
+
+.mini-month-day:hover {
+  background: var(--header-bg);
+}
+
+.mini-month-day.mini-month-today {
+  background: var(--today-border);
+  color: var(--body-bg);
+  font-weight: bold;
+}
+
+.mini-month-day.mini-month-other {
+  visibility: hidden;
+}
+
 .header {
   font-size: 1em;
   display: grid;
