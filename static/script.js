@@ -338,6 +338,7 @@ function generateAgenda() {
       checkBtn = document.createElement('span');
       checkBtn.classList.add('event-check');
       checkBtn.textContent = eventDone(event) ? '✓' : '○';
+      checkBtn.setAttribute('aria-label', eventDone(event) ? 'Mark incomplete' : 'Mark complete');
       checkBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         checkpoint();
@@ -349,6 +350,7 @@ function generateAgenda() {
     const deleteBtn = document.createElement('span');
     deleteBtn.classList.add('event-delete', 'agenda-delete');
     deleteBtn.textContent = '×';
+    deleteBtn.setAttribute('aria-label', 'Delete event');
     if (isOriginal) {
       deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -403,6 +405,7 @@ function createDayViewEvent(event, dateStr) {
     checkBtn = document.createElement('span');
     checkBtn.classList.add('event-check');
     checkBtn.textContent = eventDone(event) ? '✓' : '○';
+    checkBtn.setAttribute('aria-label', eventDone(event) ? 'Mark incomplete' : 'Mark complete');
     checkBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       checkpoint();
@@ -414,6 +417,7 @@ function createDayViewEvent(event, dateStr) {
   const deleteBtn = document.createElement('span');
   deleteBtn.classList.add('event-delete');
   deleteBtn.textContent = '×';
+  deleteBtn.setAttribute('aria-label', 'Delete event');
   if (isOriginal) {
     deleteBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
@@ -1183,6 +1187,7 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
       const deleteBtn = document.createElement('span');
       deleteBtn.classList.add('event-delete');
       deleteBtn.textContent = '×';
+      deleteBtn.setAttribute('aria-label', 'Delete event');
       if (isOriginal) {
         deleteBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
@@ -1200,6 +1205,7 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
         checkBtn = document.createElement('span');
         checkBtn.classList.add('event-check');
         checkBtn.textContent = eventDone(event) ? '✓' : '○';
+        checkBtn.setAttribute('aria-label', eventDone(event) ? 'Mark incomplete' : 'Mark complete');
         checkBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           checkpoint();
