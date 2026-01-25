@@ -350,6 +350,101 @@ h1 {
   grid-template-columns: 1fr;
 }
 
+.week-view {
+  overflow-y: auto;
+  height: calc(100vh - 2rem);
+  display: grid;
+  grid-template-columns: 4rem repeat(7, 1fr);
+  align-content: start;
+}
+
+.week-view-corner {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--day-border);
+  border-right: 1px solid var(--day-border);
+}
+
+.week-view-day-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--day-border);
+  border-right: 1px solid var(--day-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.2rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.week-view-today-header {
+  color: #2563eb;
+}
+
+.week-view-time-label {
+  padding: 0.2rem 0.3rem;
+  font-size: 0.7em;
+  opacity: 0.6;
+  border-right: 1px solid var(--day-border);
+  border-bottom: 1px solid var(--day-border);
+  text-align: right;
+  user-select: none;
+}
+
+.week-view-cell {
+  border-right: 1px solid var(--day-border);
+  border-bottom: 1px solid var(--day-border);
+  min-height: 2.5rem;
+  cursor: pointer;
+  padding: 0.1rem 0.2rem;
+}
+
+.week-view-cell:hover {
+  background: hsla(0, 0%, 50%, 0.05);
+}
+
+.week-view-allday-cell {
+  border-right: 1px solid var(--day-border);
+  border-bottom: 1px solid var(--day-border);
+  min-height: 1.5rem;
+  padding: 0.1rem 0.2rem;
+  cursor: pointer;
+}
+
+.week-view-today {
+  background: hsla(0, 0%, 50%, 0.04);
+}
+
+.week-view-current-hour {
+  background: hsla(0, 0%, 50%, 0.1);
+}
+
+.week-event {
+  font-size: 0.75em;
+  background: var(--event-bg);
+  border-radius: 2px;
+  padding: 1px 4px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 1px;
+}
+
+.week-event.event-cat {
+  background: hsla(var(--cat-hue), var(--event-cat-s), var(--event-cat-l), 0.9);
+}
+
+.week-event.event-done {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
 .day-view {
   overflow-y: auto;
   height: calc(100vh - 2rem);

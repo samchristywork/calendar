@@ -184,7 +184,7 @@ let viewMode = 'calendar';
     const d = new Date(datePart + 'T00:00:00');
     if (!isNaN(d.getTime())) currentDate = d;
   }
-  if (modePart === 'agenda' || modePart === 'day') viewMode = modePart;
+  if (modePart === 'agenda' || modePart === 'day' || modePart === 'week') viewMode = modePart;
 })();
 
 function updateHash() {
@@ -474,6 +474,110 @@ function generateDayView() {
   sideLabel.appendChild(span);
 }
 
+function createWeekEvent(event, dateStr) {
+  const el = document.createElement('div');
+  el.classList.add('week-event');
+  if (eventDone(event)) el.classList.add('event-done');
+  const catHue = categoryHue(eventCategory(event));
+  if (catHue !== null) { el.classList.add('event-cat'); el.style.setProperty('--cat-hue', catHue); }
+  const t = eventTime(event), et = eventEndTime(event);
+  const timePrefix = t ? (et ? t + '-' + et + ' ' : t + ' ') : '';
+  el.textContent = timePrefix + eventText(event);
+  el.title = el.textContent + (eventNotes(event) ? '\n' + eventNotes(event) : '');
+  el.addEventListener('click', (e) => { e.stopPropagation(); editEvent(event._baseDate, event._baseIndex, dateStr); });
+  return el;
+}
+
+function generateWeekView() {
+  calendar.innerHTML = '';
+  const dow = currentDate.getDay();
+  const daysBack = weekStart === 1 ? (dow + 6) % 7 : dow;
+  const weekStartDay = new Date(currentDate);
+  weekStartDay.setDate(currentDate.getDate() - daysBack);
+  const days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(weekStartDay);
+    d.setDate(weekStartDay.getDate() + i);
+    return d;
+  });
+  const visibleStart = new Date(weekStartDay);
+  const visibleEnd = new Date(days[6]);
+  visibleEnd.setDate(visibleEnd.getDate() + 1);
+  const effectiveEvents = buildEffectiveEvents(visibleStart, visibleEnd);
+  const todayStr = toDateStr(new Date());
+  const currentHour = new Date().getHours();
+
+  const grid = document.createElement('div');
+  grid.classList.add('week-view');
+
+  // Corner + day headers
+  grid.appendChild(document.createElement('div')).classList.add('week-view-corner');
+  days.forEach(d => {
+    const ds = toDateStr(d);
+    const th = document.createElement('div');
+    th.classList.add('week-view-day-header');
+    if (ds === todayStr) th.classList.add('week-view-today-header');
+    const name = document.createElement('span');
+    name.style.fontSize = '0.75em';
+    name.textContent = d.toLocaleDateString('default', { weekday: 'short' });
+    const num = document.createElement('span');
+    num.style.fontSize = '1.1em';
+    num.style.fontWeight = 'bold';
+    num.textContent = d.getDate();
+    th.appendChild(name); th.appendChild(num);
+    th.addEventListener('click', () => { currentDate = new Date(ds + 'T00:00:00'); viewMode = 'day'; generateCalendar(); });
+    grid.appendChild(th);
+  });
+
+  // All-day row (only if any all-day events exist this week)
+  const allDayRows = days.map(d => (effectiveEvents[toDateStr(d)] || []).filter(e => !eventTime(e)));
+  if (allDayRows.some(r => r.length > 0)) {
+    const lbl = document.createElement('div');
+    lbl.classList.add('week-view-time-label');
+    lbl.textContent = 'All day';
+    grid.appendChild(lbl);
+    days.forEach((d, i) => {
+      const ds = toDateStr(d);
+      const cell = document.createElement('div');
+      cell.classList.add('week-view-allday-cell');
+      cell.addEventListener('click', () => addEventForDate(ds));
+      allDayRows[i].forEach(ev => cell.appendChild(createWeekEvent(ev, ds)));
+      grid.appendChild(cell);
+    });
+  }
+
+  // Hour rows
+  for (let h = 0; h < 24; h++) {
+    const lbl = document.createElement('div');
+    lbl.classList.add('week-view-time-label');
+    lbl.textContent = String(h).padStart(2, '0') + ':00';
+    grid.appendChild(lbl);
+    days.forEach(d => {
+      const ds = toDateStr(d);
+      const cell = document.createElement('div');
+      cell.classList.add('week-view-cell');
+      if (ds === todayStr) cell.classList.add('week-view-today');
+      if (ds === todayStr && h === currentHour) cell.classList.add('week-view-current-hour');
+      cell.addEventListener('click', () => addEventForDate(ds));
+      (effectiveEvents[ds] || [])
+        .filter(e => { const t = eventTime(e); return t && parseInt(t.split(':')[0], 10) === h; })
+        .forEach(ev => cell.appendChild(createWeekEvent(ev, ds)));
+      grid.appendChild(cell);
+    });
+  }
+
+  calendar.appendChild(grid);
+
+  const currentHourCell = grid.querySelector('.week-view-current-hour');
+  if (currentHourCell) grid.scrollTop = Math.max(0, currentHourCell.offsetTop - 80);
+
+  const sideLabel = document.getElementById('side-label');
+  sideLabel.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = days[0].toLocaleDateString('default', { month: 'short', day: 'numeric' }) +
+    '–' + days[6].toLocaleDateString('default', { month: 'short', day: 'numeric' });
+  sideLabel.appendChild(span);
+}
+
 function generateCalendar() {
   updateHash();
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -486,6 +590,19 @@ function generateCalendar() {
     div.textContent = d.toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     header.appendChild(div);
     generateDayView();
+    return;
+  }
+  if (viewMode === 'week') {
+    header.classList.add('header-day');
+    const div = document.createElement('div');
+    const dow = currentDate.getDay();
+    const db = weekStart === 1 ? (dow + 6) % 7 : dow;
+    const ws = new Date(currentDate); ws.setDate(currentDate.getDate() - db);
+    const we = new Date(ws); we.setDate(ws.getDate() + 6);
+    div.textContent = ws.toLocaleDateString('default', { month: 'short', day: 'numeric' }) +
+      ' – ' + we.toLocaleDateString('default', { month: 'short', day: 'numeric', year: 'numeric' });
+    header.appendChild(div);
+    generateWeekView();
     return;
   }
   header.classList.remove('header-day');
@@ -1358,6 +1475,9 @@ document.addEventListener('keydown', async (event) => {
     generateCalendar();
   } else if (event.key === 'd') {
     viewMode = viewMode === 'day' ? 'calendar' : 'day';
+    generateCalendar();
+  } else if (event.key === 'v') {
+    viewMode = viewMode === 'week' ? 'calendar' : 'week';
     generateCalendar();
   } else if (event.key === 'T') {
     toggleTheme();
