@@ -876,7 +876,24 @@ function showEventForm(title, data, showRecurrence, showDelete) {
     const catInput = document.createElement('input');
     catInput.type = 'text';
     catInput.value = data.category || '';
+    const catListId = 'cat-suggestions-' + Date.now();
+    catInput.setAttribute('list', catListId);
+    const catDatalist = document.createElement('datalist');
+    catDatalist.id = catListId;
+    const usedCats = new Set();
+    for (const dayEvents of Object.values(events)) {
+      for (const ev of dayEvents) {
+        const c = eventCategory(ev);
+        if (c) usedCats.add(c);
+      }
+    }
+    for (const cat of [...usedCats].sort()) {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      catDatalist.appendChild(opt);
+    }
     catGroup.appendChild(catInput);
+    catGroup.appendChild(catDatalist);
     form.appendChild(catGroup);
 
     const notesGroup = makeFormGroup('Notes');
