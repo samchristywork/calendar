@@ -628,18 +628,29 @@ function generateCalendar() {
 
   const sideLabel = document.getElementById('side-label');
   sideLabel.innerHTML = '';
-  const seen = new Set();
-  for (let i = 0; i < nWeeks * 7; i++) {
+  let lastMonthKey = '';
+  for (let w = 0; w < nWeeks; w++) {
     const d = new Date(weekStartDay);
-    d.setDate(weekStartDay.getDate() + i);
-    const key = d.getFullYear() + '-' + d.getMonth();
-    if (!seen.has(key)) {
-      seen.add(key);
-      const span = document.createElement('span');
-      span.textContent = d.toLocaleString('default', { month: 'long' }) + ' ' + d.getFullYear();
-      sideLabel.appendChild(span);
+    d.setDate(weekStartDay.getDate() + w * 7);
+    const monthKey = d.getFullYear() + '-' + d.getMonth();
+    const wNum = isoWeekNumber(d);
+    const span = document.createElement('span');
+    if (monthKey !== lastMonthKey) {
+      span.textContent = d.toLocaleString('default', { month: 'short' }) + ' W' + wNum;
+      span.title = d.toLocaleString('default', { month: 'long' }) + ' ' + d.getFullYear();
+      lastMonthKey = monthKey;
+    } else {
+      span.textContent = 'W' + wNum;
     }
+    sideLabel.appendChild(span);
   }
+}
+
+function isoWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
 function eventText(e) { return typeof e === 'string' ? e : e.text; }
