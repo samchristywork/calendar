@@ -233,6 +233,28 @@ async function editEvent(date, index, occurrenceDate) {
     saveEvents(); generateCalendar(); return;
   }
 
+  if (result._duplicate) {
+    const src = (scope === 'one' && base.exceptions && base.exceptions[occurrenceDate])
+      ? base.exceptions[occurrenceDate] : base;
+    const dupDate = occurrenceDate || date;
+    const dupResult = await showEventForm(
+      'Duplicate event - ' + dupDate,
+      { text: eventText(src), time: eventTime(src), endTime: eventEndTime(src),
+        endDate: eventEndDate(src), category: eventCategory(src), notes: eventNotes(src),
+        recurrence: eventRecurrence(src) },
+      true, false
+    );
+    if (!dupResult) return;
+    checkpoint();
+    if (!events[dupDate]) events[dupDate] = [];
+    const newEv = { text: dupResult.text, time: dupResult.time, endTime: dupResult.endTime, category: dupResult.category, notes: dupResult.notes };
+    if (dupResult.endDate) newEv.endDate = dupResult.endDate;
+    if (dupResult.recurrence) newEv.recurrence = dupResult.recurrence;
+    events[dupDate].push(newEv);
+    events[dupDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+    saveEvents(); generateCalendar(); return;
+  }
+
   const updatedEvent = { text: result.text, time: result.time, endTime: result.endTime, category: result.category, notes: result.notes };
   if (result.endDate) updatedEvent.endDate = result.endDate;
 
@@ -943,6 +965,13 @@ function showEventForm(title, data, showRecurrence, showDelete) {
         }
       });
       btns.appendChild(deleteBtn);
+
+      const dupBtn = document.createElement('button');
+      dupBtn.type = 'button';
+      dupBtn.className = 'modal-btn';
+      dupBtn.textContent = 'Duplicate';
+      dupBtn.addEventListener('click', () => close({ _duplicate: true }));
+      btns.appendChild(dupBtn);
     }
 
     const cancelBtn = document.createElement('button');
