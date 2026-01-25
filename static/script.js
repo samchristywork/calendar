@@ -26,6 +26,8 @@ const calendar = document.getElementById('calendar');
 let nWeeks = Math.min(52, Math.max(1, parseInt(localStorage.getItem('nWeeks'), 10) || 8));
 let weekStart = parseInt(localStorage.getItem('weekStart'), 10) === 1 ? 1 : 0;
 let events = {};
+let undoSnapshot = null;
+function checkpoint() { undoSnapshot = JSON.parse(JSON.stringify(events)); }
 fetch('events.json')
   .then(response => response.json())
   .then(data => {
@@ -192,6 +194,7 @@ function updateHash() {
 }
 
 async function editEvent(date, index, occurrenceDate) {
+  checkpoint();
   const base = events[date][index];
   const isInstance = occurrenceDate && occurrenceDate !== date && eventRecurrence(base);
 
@@ -315,6 +318,7 @@ function generateAgenda() {
       checkBtn.textContent = eventDone(event) ? '✓' : '○';
       checkBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        checkpoint();
         events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
         saveEvents();
         generateCalendar();
@@ -327,6 +331,7 @@ function generateAgenda() {
       deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!await showConfirm('Delete "' + eventText(event) + '"?', 'Delete')) return;
+        checkpoint();
         events[baseDate].splice(baseIndex, 1);
         if (events[baseDate].length === 0) delete events[baseDate];
         saveEvents();
@@ -378,6 +383,7 @@ function createDayViewEvent(event, dateStr) {
     checkBtn.textContent = eventDone(event) ? '✓' : '○';
     checkBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      checkpoint();
       events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
       saveEvents(); generateCalendar();
     });
@@ -390,6 +396,7 @@ function createDayViewEvent(event, dateStr) {
     deleteBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!await showConfirm('Delete "' + eventText(event) + '"?', 'Delete')) return;
+      checkpoint();
       events[baseDate].splice(baseIndex, 1);
       if (events[baseDate].length === 0) delete events[baseDate];
       saveEvents(); generateCalendar();
@@ -876,6 +883,7 @@ function saveEvents() {
 }
 
 async function addEventForDate(dateText) {
+  checkpoint();
   const result = await showEventForm('Add event - ' + dateText, {
     text: '', time: '', endTime: '', endDate: '', category: '', notes: '', recurrence: null
   }, true, false);
@@ -918,6 +926,7 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
     try { data = JSON.parse(e.dataTransfer.getData('text/plain')); } catch { return; }
     const { baseDate, baseIndex } = data;
     if (baseDate === dateText) return;
+    checkpoint();
     const event = events[baseDate][baseIndex];
     const copying = e.ctrlKey;
     if (!copying) {
@@ -996,6 +1005,7 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
         deleteBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
           if (!await showConfirm('Delete "' + eventText(event) + '"?', 'Delete')) return;
+          checkpoint();
           events[baseDate].splice(baseIndex, 1);
           if (events[baseDate].length === 0) delete events[baseDate];
           saveEvents();
@@ -1010,6 +1020,7 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
         checkBtn.textContent = eventDone(event) ? '✓' : '○';
         checkBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          checkpoint();
           events[baseDate][baseIndex].done = !events[baseDate][baseIndex].done;
           saveEvents();
           generateCalendar();
@@ -1265,6 +1276,7 @@ document.getElementById('json-restore').addEventListener('change', (e) => {
       e.target.value = '';
       return;
     }
+    checkpoint();
     events = data;
     e.target.value = '';
     saveEvents();
@@ -1291,6 +1303,16 @@ document.getElementById('ical-import').addEventListener('change', (e) => {
 document.addEventListener('keydown', async (event) => {
   if (!document.getElementById('modal-overlay').classList.contains('modal-hidden')) return;
   if (document.activeElement === document.getElementById('search')) return;
+  if (event.key === 'z' && (event.ctrlKey || event.metaKey)) {
+    if (!undoSnapshot) return;
+    event.preventDefault();
+    events = undoSnapshot;
+    undoSnapshot = null;
+    saveEvents();
+    generateCalendar();
+    showToast('Undone');
+    return;
+  }
   if (event.key === '/') {
     event.preventDefault();
     document.getElementById('search').focus();
