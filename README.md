@@ -8,6 +8,10 @@ interface is designed around keyboard shortcuts for fast navigation, with four
 view modes (calendar, day, week, and agenda), full iCal interoperability, and
 support for complex recurring events with per-occurrence exceptions.
 
+<p align="center">
+  <img src="./assets/screenshot.png" />
+</p>
+
 ## Features
 
 ## Usage
