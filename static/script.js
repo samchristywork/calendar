@@ -362,6 +362,7 @@ function generateAgenda() {
         generateCalendar();
       });
     }
+    attachEventContextMenu(row, baseDate, baseIndex, date, isOriginal);
     row.appendChild(timeSpan);
     row.appendChild(titleSpan);
     if (checkBtn) row.appendChild(checkBtn);
@@ -429,6 +430,7 @@ function createDayViewEvent(event, dateStr) {
     });
   }
 
+  attachEventContextMenu(el, baseDate, baseIndex, dateStr, isOriginal);
   el.appendChild(label);
   if (checkBtn) el.appendChild(checkBtn);
   el.appendChild(deleteBtn);
@@ -511,6 +513,7 @@ function createWeekEvent(event, dateStr) {
   el.textContent = timePrefix + eventText(event);
   el.title = el.textContent + (eventNotes(event) ? '\n' + eventNotes(event) : '');
   el.addEventListener('click', (e) => { e.stopPropagation(); editEvent(event._baseDate, event._baseIndex, dateStr); });
+  attachEventContextMenu(el, event._baseDate, event._baseIndex, dateStr, event._baseDate === dateStr);
   return el;
 }
 
@@ -791,6 +794,81 @@ function showMiniMonth(anchorEl, year, month) {
     };
     document.addEventListener('click', _miniMonthOutsideHandler);
   }, 0);
+}
+
+let _ctxMenu = null;
+let _ctxMenuOutsideHandler = null;
+let _ctxMenuEscHandler = null;
+
+function closeContextMenu() {
+  if (_ctxMenu) { _ctxMenu.remove(); _ctxMenu = null; }
+  document.removeEventListener('click', _ctxMenuOutsideHandler);
+  document.removeEventListener('keydown', _ctxMenuEscHandler);
+  _ctxMenuOutsideHandler = null;
+  _ctxMenuEscHandler = null;
+}
+
+function showContextMenu(x, y, items) {
+  closeContextMenu();
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  menu.style.left = Math.min(x, window.innerWidth - 160) + 'px';
+  menu.style.top = Math.min(y, window.innerHeight - items.length * 34 - 8) + 'px';
+  for (const { label, action } of items) {
+    const item = document.createElement('div');
+    item.className = 'ctx-menu-item';
+    item.textContent = label;
+    item.addEventListener('click', (e) => { e.stopPropagation(); closeContextMenu(); action(); });
+    menu.appendChild(item);
+  }
+  document.body.appendChild(menu);
+  _ctxMenu = menu;
+  setTimeout(() => {
+    _ctxMenuOutsideHandler = () => closeContextMenu();
+    _ctxMenuEscHandler = (e) => { if (e.key === 'Escape') closeContextMenu(); };
+    document.addEventListener('click', _ctxMenuOutsideHandler);
+    document.addEventListener('keydown', _ctxMenuEscHandler);
+  }, 0);
+}
+
+function attachEventContextMenu(el, baseDate, baseIndex, dateStr, isOriginal) {
+  el.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const items = [
+      { label: 'Edit', action: () => editEvent(baseDate, baseIndex, dateStr) },
+    ];
+    if (isOriginal) {
+      items.push({ label: 'Duplicate', action: async () => {
+        const src = events[baseDate][baseIndex];
+        const dupDate = dateStr || baseDate;
+        const dupResult = await showEventForm(
+          'Duplicate event - ' + dupDate,
+          { text: eventText(src), time: eventTime(src), endTime: eventEndTime(src),
+            endDate: eventEndDate(src), category: eventCategory(src), notes: eventNotes(src),
+            recurrence: eventRecurrence(src) },
+          true, false
+        );
+        if (!dupResult) return;
+        checkpoint();
+        if (!events[dupDate]) events[dupDate] = [];
+        const newEv = { text: dupResult.text, time: dupResult.time, endTime: dupResult.endTime, category: dupResult.category, notes: dupResult.notes };
+        if (dupResult.endDate) newEv.endDate = dupResult.endDate;
+        if (dupResult.recurrence) newEv.recurrence = dupResult.recurrence;
+        events[dupDate].push(newEv);
+        events[dupDate].sort((a, b) => normalizeTime(eventTime(a)).localeCompare(normalizeTime(eventTime(b))));
+        saveEvents(); generateCalendar();
+      }});
+      items.push({ label: 'Delete', action: async () => {
+        if (!await showConfirm('Delete "' + eventText(events[baseDate][baseIndex]) + '"?', 'Delete')) return;
+        checkpoint();
+        events[baseDate].splice(baseIndex, 1);
+        if (events[baseDate].length === 0) delete events[baseDate];
+        saveEvents(); generateCalendar();
+      }});
+    }
+    showContextMenu(e.clientX, e.clientY, items);
+  });
 }
 
 function eventText(e) { return typeof e === 'string' ? e : e.text; }
@@ -1346,6 +1424,7 @@ function createDayElement(dateText, hue, isToday, isWeekend, displayEvents) {
         });
       }
 
+      attachEventContextMenu(eventElement, baseDate, baseIndex, dateText, isOriginal);
       eventElement.appendChild(label);
       if (checkBtn) eventElement.appendChild(checkBtn);
       eventElement.appendChild(deleteBtn);
