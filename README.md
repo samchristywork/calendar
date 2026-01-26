@@ -2,6 +2,12 @@
 
 ## Overview
 
+A lightweight personal calendar served by a Go HTTP backend with a vanilla
+JavaScript frontend. Events are stored as JSON and require no database. The
+interface is designed around keyboard shortcuts for fast navigation, with four
+view modes (calendar, day, week, and agenda), full iCal interoperability, and
+support for complex recurring events with per-occurrence exceptions.
+
 ## Features
 
 ## Usage
