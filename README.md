@@ -48,6 +48,29 @@ go run . -port 9000
 
 ### Keyboard shortcuts
 
+| Key | Action |
+|---|---|
+| `↑` / `←` | Move back one week |
+| `↓` / `→` | Move forward one week |
+| `t` | Jump to today |
+| `n` | Add event on the current date |
+| `d` | Day view |
+| `v` | Week view |
+| `l` | Toggle agenda / calendar view |
+| `w` | Show one week |
+| `m` | Show four weeks |
+| `=` / `-` | Increase / decrease weeks shown |
+| `g` | Go to a specific date |
+| `s` | Toggle week start (Sun / Mon) |
+| `T` | Toggle dark / light mode |
+| `b` | Backup events to JSON |
+| `r` | Restore events from JSON backup |
+| `e` | Export events as .ics |
+| `i` | Import events from .ics |
+| `/` | Focus the search box |
+| `?` | Show / hide keyboard shortcuts |
+| `Ctrl+Z` | Undo last action |
+
 ## Dependencies
 
 ## License
