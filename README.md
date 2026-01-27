@@ -35,6 +35,17 @@ support for complex recurring events with per-occurrence exceptions.
 
 ## Usage
 
+```
+go run .
+```
+
+The server listens on port 8080 by default. Set the `PORT` environment variable
+or pass `-port` to use a different port.
+
+```
+go run . -port 9000
+```
+
 ### Keyboard shortcuts
 
 ## Dependencies
